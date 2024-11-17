@@ -16,13 +16,20 @@
     (6 5 4 3 2 1))
 )
 
+(defun tabuleiro-inicial()
+ '((8 8 8 8 8 8)
+ (8 8 8 8 8 8))
+)
+
+
 ;;; Seletores
 
 (defun linha (l tabuleiro)
-  "Retorna uma lista que representa uma linha do tabuleiro"
-  (cond ((and (/= l 0) (/= l 1)) (error "A linha só pode ser 0 ou 1"))
+  (cond ((or (not (integerp l)) (< l 0) (> l 1))
+         (error "A linha só pode ser 0 ou 1, mas recebeu ~A" l))
         (t (nth l tabuleiro)))
 )
+
 
 (defun celula (l c tabuleiro)
   (cond ((or (< c 0) (> c 5)) (error "A coluna tem que estar entre 0 e 5"))
@@ -33,11 +40,7 @@
 
 (defun tabuleiro-vaziop (tabuleiro)
   "Verifica se o tabuleiro está vazio"
-  (cond
-    ((null tabuleiro) t)
-    ((null (car tabuleiro)) (tabuleiro-vaziop (cdr tabuleiro)))
-    ((/= (car (car tabuleiro)) 0) nil)
-    (t (tabuleiro-vaziop (cons (cdr (car tabuleiro)) (cdr tabuleiro)))))
+  (every (lambda (linha) (every #'zerop linha)) tabuleiro)
 )
 
 (defun substituir-posicao (idx lista &optional (valor 0))
@@ -58,44 +61,40 @@
 
 ;;; Operadores
 (defun distribuir-pecas (num-pecas linha col &optional (tabuleiro (tabuleiro-vazio)))
-  "Retorna uma lista com os pares de índices onde serão colocadas as peças."
+  "Retorna uma lista com os pares de índices onde serão colocadas as peças, no sentido anti-horário."
   (cond
-    ((<= num-pecas 0) '())
-
+    ((<= num-pecas 0) '()) 
     (t
-     (let* ((proxima-col (mod (+ col 1) 6))
-            (proxima-linha (if (= proxima-col 0)
-                               (if (= linha 0) 1 0)
-                               linha))
-            
-            (nova-linha (if (and (= proxima-linha linha) (= proxima-col col))
-                            (if (= proxima-linha 0) 1 0)
-                            proxima-linha))
-            (nova-coluna (if (and (= proxima-linha linha) (= proxima-col col))
-                             (+ proxima-col 1)
-                             proxima-col)))
+     (let* ((proxima-linha (if (and (= linha 0) (= col 0))
+                               1 
+                               (if (and (= linha 1) (= col 5))
+                                   0 
+                                   linha)))
+            (proxima-col (cond
+                           ((= linha 0) (if (= col 0) 0 (1- col)))
+                           ((= linha 1) (if (= col 5) 5 (1+ col))))))
        
-       (cons (list nova-linha nova-coluna)
-             (distribuir-pecas (1- num-pecas) nova-linha nova-coluna))
-      )
-    )
-  )
+       (cons (list proxima-linha proxima-col)
+             (distribuir-pecas (1- num-pecas) proxima-linha proxima-col tabuleiro)))))
 )
 
 (defun operador (linha-idx col-idx tabuleiro)
-  "Recebe dois índices e o tabuleiro, retira as peças das posições passadas e distribui novas peças, com a condição de remoção se necessário."
+  "Aplica o operador às peças do buraco especificado."
   (let* ((pecas-a-retirar (celula linha-idx col-idx tabuleiro))
-         (tabuleiro-sem-pecas (substituir linha-idx col-idx tabuleiro 0)) ;; Retira as peças da posição indicada
-         (posicoes-distribuicao (distribuir-pecas pecas-a-retirar linha-idx col-idx tabuleiro-sem-pecas)) 
-         (ultima-posicao (car (last posicoes-distribuicao))) ;; Última posição após distribuição
+         (tabuleiro-sem-pecas (substituir linha-idx col-idx tabuleiro 0))
+         (posicoes-distribuicao (distribuir-pecas pecas-a-retirar linha-idx col-idx tabuleiro-sem-pecas))
+         (ultima-posicao (car (last posicoes-distribuicao)))
          (ultima-linha (first ultima-posicao))
          (ultima-coluna (second ultima-posicao))
          (pecas-na-ultima (celula ultima-linha ultima-coluna tabuleiro)))
-    
-    ;; Verificar se a última posição contém 1, 3 ou 5 peças e se sim, retira-as
-    (if (member pecas-na-ultima '(1 3 5))
-        (substituir ultima-linha ultima-coluna tabuleiro 0)
-        tabuleiro
-    )
-  )
+    ;; Verifica se as peças na última posição são 1, 3 ou 5 para retirar as peças, senão retorna o tabuleiro com as peças distribuídas
+    (let ((novo-tabuleiro
+           (if (member pecas-na-ultima '(1 3 5))  ; Se a última célula tiver 1, 3 ou 5 peças
+               (substituir ultima-linha ultima-coluna tabuleiro-sem-pecas 0)  ; Zera a última célula
+               tabuleiro-sem-pecas)))  ; Caso contrário, retorna o tabuleiro com as peças distribuídas normalmente
+      novo-tabuleiro))
 )
+
+
+
+
