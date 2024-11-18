@@ -4,42 +4,36 @@
 
 ;;; BFS
 (defun bfs (abertos fechados)
-  "Algoritmo BFS recursivo para encontrar o caminho ao estado final."
+  "Algoritmo BFS que retorna o caminho para o nó objetivo."
   (cond
-    ((null abertos) nil) ; Se não há estados a explorar, falha
+    ((null abertos) nil) ; Falha se não há mais nós a explorar
     (t
-     (let* ((no-atual (car abertos))             ; Primeiro nó da lista
-            (resto-abertos (cdr abertos)))       ; Restante dos estados a explorar
-       (if (tabuleiro-vaziop no-atual)            ; Verifica se o estado atual é o objetivo
-           no-atual                             ; Retorna o estado final
-         (let ((sucessores (gerar-sucessores no-atual)))
-           ;; Remove sucessores já visitados e adiciona novos a abertos
-           (bfs
-            (append resto-abertos
-                    (remove-if (lambda (s) (or (member s fechados :test #'equal)
-                                              (member s abertos :test #'equal)))
-                               sucessores))
-            (cons no-atual fechados)))))))
+     (let* ((no-atual (pop abertos))         ; Remove o primeiro nó da fila
+            (estado (car no-atual))          ; Estado atual
+            (caminho (cdr no-atual)))        ; Caminho percorrido até o estado
+       (if (tabuleiro-vaziop estado)        ; Se o estado atual é a solução
+           (reverse (cons estado caminho))  ; Retorna o caminho completo
+           (let ((sucessores (gerar-sucessores estado)))
+             ;; Adiciona novos sucessores à fila
+             (dolist (s sucessores)
+               (unless (or (member s fechados :test #'equal)
+                           (member s (mapcar #'car abertos) :test #'equal))
+                 (push (cons s (cons estado caminho)) abertos)))
+             ;; Adiciona o estado atual aos fechados
+             (bfs abertos (cons estado fechados)))))))
 )
 
+(defun percorrer-linha (matriz linha coluna resultados)
+  "Percorre recursivamente uma linha da matriz e acumula os resultados da função operador."
+  (if (< coluna (length (nth linha matriz)))  ; Verifica se ainda há colunas na linha
+      (let ((resultado (list (list linha coluna) (operador linha coluna matriz))))  ; Chama a função operador e obtém o resultado
+        (percorrer-linha matriz linha (1+ coluna) (cons resultado resultados)))  ; Acumula o resultado na lista
+      resultados))  ; Retorna a lista acumulada quando não há mais colunas
 
-(defun gerar-sucessores (estado)
-  "Gera os sucessores aplicando os operadores válidos."
-  (let ((sucessores '()))
-    (dotimes (linha-idx 2)
-      (dotimes (col-idx 6)
-        (when (> (celula linha-idx col-idx estado) 0)
-          (let ((novo-estado (operador linha-idx col-idx estado)))
-            ;; Só adiciona estados realmente novos
-            (unless (equal estado novo-estado)
-              (push novo-estado sucessores))))))
-    sucessores)
-)
+(defun percorrer-matriz (matriz &optional (linha 0) (resultados '()))
+  "Percorre recursivamente a matriz e acumula os resultados da função operador."
+  (if (< linha (length matriz))  ; Verifica se ainda há linhas na matriz
+      (let ((novos-resultados (percorrer-linha matriz linha 0 resultados)))  ; Percorre a linha e acumula os resultados
+        (percorrer-matriz matriz (1+ linha) novos-resultados))  ; Chama recursivamente para a próxima linha
+      resultados))  ; Retorna a lista com todos os resultados ao final
 
-(defun gerar-todos-sucessores (estado)
-  (let ((sucessores '()))
-    (dotimes (linha 2 sucessores) ; Itera pelas linhas
-      (dotimes (buraco 6 sucessores) ; Itera pelos buracos
-        (when (> (nth buraco (nth linha estado)) 0) ; Verifica se há peças no buraco
-          (push (operador estado linha buraco) sucessores)))))
-)

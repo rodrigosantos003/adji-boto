@@ -86,8 +86,8 @@
          (ultima-posicao (car (last posicoes-distribuicao)))
          (ultima-linha (first ultima-posicao))
          (ultima-coluna (second ultima-posicao))
-         (novo-tabuleiro (incrementar-posicoes (posicoes-distribuicao) (tabuleiro-sem-pecas))))
-         (pecas-na-ultima (celula ultima-linha ultima-coluna novo-tabuleiro))
+         (novo-tabuleiro (incrementar-posicoes posicoes-distribuicao tabuleiro-sem-pecas))
+         (pecas-na-ultima (celula ultima-linha ultima-coluna novo-tabuleiro)))
     ;; Verifica se as peças na última posição são 1, 3 ou 5 para retirar as peças, senão retorna o tabuleiro com as peças distribuídas
     (let ((tabuleiro-final
            (if (member pecas-na-ultima '(1 3 5))  ; Se a última célula tiver 1, 3 ou 5 peças
