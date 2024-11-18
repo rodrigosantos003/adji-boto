@@ -62,21 +62,28 @@
 ;;; Operadores
 (defun distribuir-pecas (num-pecas linha col &optional (tabuleiro (tabuleiro-vazio)))
   "Retorna uma lista com os pares de índices onde serão colocadas as peças, no sentido anti-horário."
-  (cond
-    ((<= num-pecas 0) '()) 
-    (t
-     (let* ((proxima-linha (if (and (= linha 0) (= col 0))
-                               1 
-                               (if (and (= linha 1) (= col 5))
-                                   0 
-                                   linha)))
-            (proxima-col (cond
-                           ((= linha 0) (if (= col 0) 0 (1- col)))
-                           ((= linha 1) (if (= col 5) 5 (1+ col))))))
-       
-       (cons (list proxima-linha proxima-col)
-             (distribuir-pecas (1- num-pecas) proxima-linha proxima-col tabuleiro)))))
+  (let* ((num-linhas (length tabuleiro))
+         (num-colunas (length (car tabuleiro))))
+    (cond
+      ((<= num-pecas 0) '()) 
+      (t
+       (let* ((proxima-linha 
+               (cond 
+                ((and (= linha 0) (> col 0)) linha) ; parte superior
+                ((and (= col 0) (< linha (1- num-linhas))) (1+ linha)) ; lado esquerdo
+                ((and (= linha (1- num-linhas)) (< col (1- num-colunas))) linha) ; parte inferior
+                ((and (= col (1- num-colunas)) (> linha 0)) (1- linha)))) ; lado direito
+              (proxima-col
+               (cond 
+                ((and (= linha 0) (> col 0)) (1- col)) ; parte superior
+                ((and (= col 0) (< linha (1- num-linhas))) col) ; lado esquerdo
+                ((and (= linha (1- num-linhas)) (< col (1- num-colunas))) (1+ col)) ; parte inferior
+                ((and (= col (1- num-colunas)) (> linha 0)) col)))) ; lado direito
+         
+         (cons (list proxima-linha proxima-col)
+               (distribuir-pecas (1- num-pecas) proxima-linha proxima-col tabuleiro))))))
 )
+
 
 (defun operador (linha-idx col-idx tabuleiro)
   "Aplica o operador às peças do buraco especificado."
