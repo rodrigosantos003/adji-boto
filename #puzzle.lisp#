@@ -1,6 +1,6 @@
 ;;;; puzzle.lisp
-;;;; Seletores, FunÁıes Auxiliares e Operadores
-;;;; Autores: Rodrigo Santos e Jo„o Fernandes
+;;;; Seletores, Fun√ß√µes Auxiliares e Operadores
+;;;; Autores: Rodrigo Santos e Jo√£o Fernandes
 
 
 ;;; Tabuleiros
@@ -26,7 +26,7 @@
 
 (defun linha (l tabuleiro)
   (cond ((or (not (integerp l)) (< l 0) (> l 1))
-         (error "A linha sÛ pode ser 0 ou 1, mas recebeu ~A" l))
+         (error "A linha s√≥ pode ser 0 ou 1, mas recebeu ~A" l))
         (t (nth l tabuleiro)))
 )
 
@@ -36,10 +36,10 @@
         (t (nth c (linha l tabuleiro))))
 )
 
-;;; FunÁıes auxiliares
+;;; Fun√ß√µes auxiliares
 
 (defun tabuleiro-vaziop (tabuleiro)
-  "Verifica se o tabuleiro est· vazio"
+  "Verifica se o tabuleiro est√° vazio"
   (every (lambda (linha) (every #'zerop linha)) tabuleiro)
 )
 
@@ -49,7 +49,7 @@
              (substituir-posicao (1- idx) (cdr lista) valor)))))
 
 (defun substituir (l c tabuleiro &optional (valor 0))
-  "Substitui o valor na posiÁ„o (l, c) do tabuleiro pelo 'valor'."
+  "Substitui o valor na posi√ß√£o (l, c) do tabuleiro pelo 'valor'."
   (cond
     ((zerop l) (cons (substituir-posicao c (car tabuleiro) valor) (cdr tabuleiro)))
     (t (cons (car tabuleiro) (substituir (1- l) c (cdr tabuleiro) valor))))
@@ -61,7 +61,7 @@
 
 ;;; Operadores
 (defun distribuir-pecas (num-pecas linha col &optional (tabuleiro (tabuleiro-vazio)))
-  "Retorna uma lista com os pares de Ìndices onde ser„o colocadas as peÁas, no sentido anti-hor·rio."
+  "Retorna uma lista com os pares de √≠ndices onde ser√£o colocadas as pe√ßas, no sentido anti-hor√°rio."
   (cond
     ((<= num-pecas 0) '()) 
     (t
@@ -79,30 +79,30 @@
 )
 
 (defun operador (linha-idx col-idx tabuleiro)
-  "Aplica o operador ‡s peÁas do buraco especificado."
+  "Aplica o operador √†s pe√ßas do buraco especificado."
   (let* ((pecas-a-retirar (celula linha-idx col-idx tabuleiro))
          (tabuleiro-sem-pecas (substituir linha-idx col-idx tabuleiro 0))
          (posicoes-distribuicao (distribuir-pecas pecas-a-retirar linha-idx col-idx tabuleiro-sem-pecas))
          (ultima-posicao (car (last posicoes-distribuicao)))
          (ultima-linha (first ultima-posicao))
          (ultima-coluna (second ultima-posicao))
-         (novo-tabuleiro (incrementar-posicoes (posicoes-distribuicao) (tabuleiro-sem-pecas))))
-         (pecas-na-ultima (celula ultima-linha ultima-coluna novo-tabuleiro))
-    ;; Verifica se as peÁas na ˙ltima posiÁ„o s„o 1, 3 ou 5 para retirar as peÁas, sen„o retorna o tabuleiro com as peÁas distribuÌdas
+         (novo-tabuleiro (incrementar-posicoes (posicoes-distribuicao) (tabuleiro-sem-pecas)))
+         (pecas-na-ultima (celula ultima-linha ultima-coluna novo-tabuleiro)))
+    ;; Verifica se as pe√ßas na √∫ltima posi√ß√£o s√£o 1, 3 ou 5 para retirar as pe√ßas, sen√£o retorna o tabuleiro com as pe√ßas distribu√≠das
     (let ((tabuleiro-final
-           (if (member pecas-na-ultima '(1 3 5))  ; Se a ˙ltima cÈlula tiver 1, 3 ou 5 peÁas
-               (substituir ultima-linha ultima-coluna novo-tabuleiro 0)  ; Zera a ˙ltima cÈlula
-               novo-tabuleiro)))  ; Caso contr·rio, retorna o tabuleiro com as peÁas distribuÌdas normalmente
+           (if (member pecas-na-ultima '(1 3 5))  ; Se a √∫ltima c√©lula tiver 1, 3 ou 5 pe√ßas
+               (substituir ultima-linha ultima-coluna novo-tabuleiro 0)  ; Zera a √∫ltima c√©lula
+               novo-tabuleiro)))  ; Caso contr√°rio, retorna o tabuleiro com as pe√ßas distribu√≠das normalmente
       tabuleiro-final))
 )
 
 (defun incrementar-posicoes (posicoes tabuleiro)
-  (if (null posicoes) ; Caso base: lista de posiÁıes vazia
+  (if (null posicoes) ; Caso base: lista de posi√ß√µes vazia
       tabuleiro
       (let ((l (first (first posicoes)))  ; Linha
             (c (second (first posicoes)))) ; Coluna
         (incrementar-posicoes (rest posicoes) ; Chamada recursiva com a cauda da lista
-                               (incrementar-posicao l c tabuleiro))))) ; Incrementa a cÈlula
+                               (incrementar-posicao l c tabuleiro))))) ; Incrementa a c√©lula
 
 
 
