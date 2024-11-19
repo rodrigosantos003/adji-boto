@@ -25,19 +25,15 @@
              (bfs abertos (cons estado fechados)))))))
 )
 
-
-(defun adicionar-a-abertos (elemento)
-  "Adiciona o elemento à lista global abertos se ele ainda não estiver presente."
-  (unless (member elemento abertos)  ; Verifica se o elemento já está na lista
-    (setq abertos (cons elemento abertos))))  ; Adiciona o elemento à lista global
-
 (defun percorrer-linha (matriz linha coluna)
   "Percorre recursivamente uma linha da matriz e adiciona os resultados únicos à lista abertos."
   (if (< coluna (length (nth linha matriz)))  ; Verifica se ainda há colunas na linha
-      (let ((resultado (list (list linha coluna) (operador linha coluna matriz))))  ; Chama a função operador e obtém o resultado
-        (adicionar-a-abertos resultado)  ; Adiciona o resultado à lista global abertos
+      (let ((resultado (list (copy-tree matriz) (list linha coluna) (operador linha coluna matriz))))  ; Chama a função operador e obtém o resultado
+        (unless (member resultado abertos :test #'equal)  ; Verifica se o resultado já está em abertos
+          (setq abertos (cons resultado abertos)))  ; Adiciona o resultado à lista global abertos
         (percorrer-linha matriz linha (1+ coluna)))  ; Continua para a próxima coluna
       nil))  ; Retorna nil ao final da linha
+
 
 (defun percorrer-matriz (matriz &optional (linha 0))
   "Percorre recursivamente a matriz e adiciona os resultados únicos à lista abertos."
