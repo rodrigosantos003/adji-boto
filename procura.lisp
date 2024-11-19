@@ -2,6 +2,8 @@
 ;;;; Alogritmos de porcura
 ;;;; Autores: Rodrigo Santos e João Fernandes
 
+(defvar abertos '())  ; Define a lista global abertos como vazia inicialmente
+
 ;;; BFS
 (defun bfs (abertos fechados)
   "Algoritmo BFS que retorna o caminho para o nó objetivo."
@@ -23,17 +25,24 @@
              (bfs abertos (cons estado fechados)))))))
 )
 
-(defun percorrer-linha (matriz linha coluna resultados)
-  "Percorre recursivamente uma linha da matriz e acumula os resultados da função operador."
+
+(defun adicionar-a-abertos (elemento)
+  "Adiciona o elemento à lista global abertos se ele ainda não estiver presente."
+  (unless (member elemento abertos)  ; Verifica se o elemento já está na lista
+    (setq abertos (cons elemento abertos))))  ; Adiciona o elemento à lista global
+
+(defun percorrer-linha (matriz linha coluna)
+  "Percorre recursivamente uma linha da matriz e adiciona os resultados únicos à lista abertos."
   (if (< coluna (length (nth linha matriz)))  ; Verifica se ainda há colunas na linha
       (let ((resultado (list (list linha coluna) (operador linha coluna matriz))))  ; Chama a função operador e obtém o resultado
-        (percorrer-linha matriz linha (1+ coluna) (cons resultado resultados)))  ; Acumula o resultado na lista
-      resultados))  ; Retorna a lista acumulada quando não há mais colunas
+        (adicionar-a-abertos resultado)  ; Adiciona o resultado à lista global abertos
+        (percorrer-linha matriz linha (1+ coluna)))  ; Continua para a próxima coluna
+      nil))  ; Retorna nil ao final da linha
 
-(defun percorrer-matriz (matriz &optional (linha 0) (resultados '()))
-  "Percorre recursivamente a matriz e acumula os resultados da função operador."
+(defun percorrer-matriz (matriz &optional (linha 0))
+  "Percorre recursivamente a matriz e adiciona os resultados únicos à lista abertos."
   (if (< linha (length matriz))  ; Verifica se ainda há linhas na matriz
-      (let ((novos-resultados (percorrer-linha matriz linha 0 resultados)))  ; Percorre a linha e acumula os resultados
-        (percorrer-matriz matriz (1+ linha) novos-resultados))  ; Chama recursivamente para a próxima linha
-      resultados))  ; Retorna a lista com todos os resultados ao final
-
+      (progn
+        (percorrer-linha matriz linha 0)  ; Percorre a linha atual
+        (percorrer-matriz matriz (1+ linha)))  ; Chama recursivamente para a próxima linha
+      abertos))  ; Retorna a lista global abertos ao final
