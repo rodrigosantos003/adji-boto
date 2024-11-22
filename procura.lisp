@@ -2,43 +2,49 @@
 ;;;; Alogritmos de porcura
 ;;;; Autores: Rodrigo Santos e João Fernandes
 
-(defvar abertos '())  ; Define a lista global abertos como vazia inicialmente
 
-;;; BFS
-(defun bfs (abertos fechados)
-  "Algoritmo BFS que retorna o caminho para o nó objetivo."
-  (cond
-    ((null abertos) nil) ; Falha se não há mais nós a explorar
-    (t
-     (let* ((no-atual (pop abertos))         ; Remove o primeiro nó da fila
-            (estado (car no-atual))          ; Estado atual
-            (caminho (cdr no-atual)))        ; Caminho percorrido até o estado
-       (if (tabuleiro-vaziop estado)        ; Se o estado atual é a solução
-           (reverse (cons estado caminho))  ; Retorna o caminho completo
-           (let ((sucessores (gerar-sucessores estado)))
-             ;; Adiciona novos sucessores à fila
-             (dolist (s sucessores)
-               (unless (or (member s fechados :test #'equal)
-                           (member s (mapcar #'car abertos) :test #'equal))
-                 (push (cons s (cons estado caminho)) abertos)))
-             ;; Adiciona o estado atual aos fechados
-             (bfs abertos (cons estado fechados)))))))
-)
-
-(defun percorrer-linha (matriz linha coluna)
-  "Percorre recursivamente uma linha da matriz e adiciona os resultados únicos à lista abertos."
-  (if (< coluna (length (nth linha matriz)))  ; Verifica se ainda há colunas na linha
-      (let ((resultado (list (copy-tree matriz) (list linha coluna) (operador linha coluna matriz))))  ; Chama a função operador e obtém o resultado
-        (unless (member resultado abertos :test #'equal)  ; Verifica se o resultado já está em abertos
-          (setq abertos (cons resultado abertos)))  ; Adiciona o resultado à lista global abertos
-        (percorrer-linha matriz linha (1+ coluna)))  ; Continua para a próxima coluna
-      nil))  ; Retorna nil ao final da linha
+;;; ((1 2 3 4 5 6) (1 2 3 4 5 6))
 
 
-(defun percorrer-matriz (matriz &optional (linha 0))
-  "Percorre recursivamente a matriz e adiciona os resultados únicos à lista abertos."
-  (if (< linha (length matriz))  ; Verifica se ainda há linhas na matriz
+;(if (or (member novo-resultado resultados :test #'equal)  ; Já está nos resultados locais
+ ;               (member novo-resultado abertos :test #'equal)     ; Está na lista global abertos
+  ;              (member novo-resultado fechados :test #'equal))   ; Está na lista global fechados
+
+(defun bfs (tabuleiro)
+  (let ((abertos (list (list nil nil tabuleiro)))  ; Inicializa a lista de abertos
+        (fechados '()))                           ; Inicializa a lista de fechados
+    (loop
+      (if (null abertos)  ; Se a lista de abertos estiver vazia, termine a busca
+          (return nil))   ; Não encontrou o objetivo
+      (let ((node (first abertos)))  ; Pega o primeiro nó da lista de abertos
+        (setq abertos (rest abertos))  ; Remove o nó atual da lista de abertos
+        (push node fechados)  ; Adiciona o nó atual à lista de fechados
+        (let ((sucessores (gerar-filhos (third node) abertos fechados)))  ; Gera sucessores
+          (loop for s in sucessores
+                when (tabuleiro-vaziop (third s))  ; Verifica se é o objetivo
+                  do (return s)  ; Retorna o nó objetivo
+                unless (or (member (third s) (mapcar #'third abertos) :test #'equal)  ; Verifica se está em abertos
+                           (member (third s) (mapcar #'third fechados) :test #'equal))  ; Verifica se está em fechados
+                  do (push s abertos)))))))
+
+(defun gerar-filhos (matriz abertos fechados &optional (linha 0) (coluna 0) (resultados '()))
+  (format t "Debug: linha = ~A, coluna = ~A, matriz = ~A ~%" linha coluna matriz)
+  (format t "Debug: tamanho nth = ~A ~%" (length (nth linha matriz)))
+  (if (< linha (length matriz)) ; Verifica se a linha é válida
       (progn
-        (percorrer-linha matriz linha 0)  ; Percorre a linha atual
-        (percorrer-matriz matriz (1+ linha)))  ; Chama recursivamente para a próxima linha
-      abertos))  ; Retorna a lista global abertos ao final
+        (format t "Debug (linha válida): linha = ~A, matriz-length = ~A ~%" linha (length matriz))
+        (if (< coluna (length (nth linha matriz))) ; Verifica se a coluna é válida
+            (progn
+              (format t "Debug (coluna válida): linha = ~A, coluna = ~A, matriz-length = ~A ~%" linha coluna (length (nth linha matriz)))
+              (let* ((tabuleiro-pai (copy-tree matriz))
+                     (operacao (list linha coluna))
+                     (filho (operador linha coluna tabuleiro-pai))
+                     (resultado (list tabuleiro-pai operacao filho)))
+                (gerar-filhos matriz abertos fechados linha (+ coluna 1) 
+                              (cons resultado resultados)))) ; Adiciona `resultado` à lista
+          (progn
+            (format t "Debug (coluna inválida): linha = ~A, coluna = ~A ~%" linha coluna)
+            (gerar-filhos matriz abertos fechados (+ linha 1) 0 resultados)))) ; Avança para a próxima linha
+    (progn
+      (format t "Debug (linha inválida): linha = ~A, matriz-length = ~A ~%" linha (length matriz))
+      resultados))) ; Retorna os resultados

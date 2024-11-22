@@ -111,5 +111,3 @@
         (incrementar-posicoes (rest posicoes) ; Chamada recursiva com a cauda da lista
                                (incrementar-posicao l c tabuleiro))))) ; Incrementa a célula
 
-
-
