@@ -20,31 +20,33 @@
               (push s abertos))))))))  ; Adiciona o sucessor ao início da lista abertos
 
 
-(defun gerar-filhos (matriz &optional (linha 0) (coluna 0) (resultados '()))
-  "Gera sucessores a partir de uma matriz, ignorando células não distribuíveis."
-  (if (< linha (length matriz)) ; Verifica se a linha é válida
-      (progn
-        (if (< coluna (length (nth linha matriz))) ; Verifica se a coluna é válida
-            (progn
-              ;; Verifica se a célula pode gerar sucessores
-              (if (celula-distribuivelp linha coluna matriz)
-                  (let* ((tabuleiro-pai (copy-tree matriz))
-                         (operacao (list linha coluna))
-                         (filho (operador linha coluna tabuleiro-pai))
-                         (resultado (list tabuleiro-pai operacao filho)))
-                    (gerar-filhos matriz (+ coluna 1) 0 (cons resultado resultados)))
-                ;; Caso não seja distribuível, avança para a próxima coluna
-                (gerar-filhos matriz linha (+ coluna 1) resultados)))
-          ;; Avança para a próxima linha
-          (gerar-filhos matriz (+ linha 1) 0 resultados)))
-    resultados)) ; Retorna os resultados
+(defun gerar-filhos (node &optional (linha 0) (coluna 0) (resultados '()))
+  "Gera sucessores de forma recursiva a partir de uma matriz, ignorando células não distribuíveis."
+  (let ((matriz (third node)))
+    (if (>= linha (length matriz)) ; Se percorremos todas as linhas, terminar.
+        resultados
+      (let ((nova-linha (if (>= coluna (length (nth linha matriz)))
+                            (1+ linha)
+                          linha))
+            (nova-coluna (if (>= coluna (length (nth linha matriz)))
+                             0
+                           (1+ coluna))))
+        (if (and (< linha (length matriz)) ; Validar que ainda estamos na matriz.
+                 (< coluna (length (nth linha matriz)))
+                 (celula-distribuivelp linha coluna matriz))
+            (let* ((tabuleiro-pai node)
+                   (operacao (list linha coluna))
+                   (filho (operador linha coluna matriz))
+                   (resultado (list tabuleiro-pai operacao filho)))
+              (gerar-filhos node nova-linha nova-coluna (cons resultado resultados)))
+          (gerar-filhos node nova-linha nova-coluna resultados)))))) ; Avançar para a próxima célula.
+
+
 
 
 (defun celula-distribuivelp (linha coluna matriz)
   "Retorna T se a célula tem peças suficientes para uma distribuição válida."
   (let ((valor (celula linha coluna matriz)))
-    (and (> valor 0)
-         ;; Adicione aqui a regra para peças suficientes, se necessário
-         t)))  ; Ajuste ou remova este `t` dependendo da regra específica
+    (and (> valor 0) t)))
 
 
