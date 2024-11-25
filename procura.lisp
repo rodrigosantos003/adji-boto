@@ -3,7 +3,7 @@
 ;;;; Autores: Rodrigo Santos e João Fernandes
 
 (defun bfs (tabuleiro)
-  (let ((abertos (list (list nil nil tabuleiro)))  ; Inicializa a lista de abertos
+  (let ((abertos (list (list nil nil tabuleiro 0)))  ; Inicializa a lista de abertos
         (fechados '()))                           ; Inicializa a lista de fechados
     (loop
        (if (null abertos)  ; Se a lista de abertos estiver vazia, termine a busca
@@ -13,31 +13,21 @@
         (push node fechados)  ; Adiciona o nó atual à lista de fechados
         (if (tabuleiro-vaziop (third node))  ; Verifica se é o objetivo
             (return (caminho node fechados)))  ; Retorna o caminho completo até o objetivo
-        (let ((sucessores (gerar-filhos (third node))))  ; Gera sucessores
+        (let ((sucessores (gerar-filhos node)))  ; Gera sucessores
           (dolist (s sucessores)  ; Itera sobre cada sucessor
             (unless (or (member (third s) (mapcar #'third abertos) :test #'equal)  ; Verifica se está em abertos
                         (member (third s) (mapcar #'third fechados) :test #'equal))  ; Verifica se está em fechados
               (setq abertos (append abertos (list s))))))))))
 
 
-
 (defun caminho (node fechados &optional (solucao '()))
-  (let* ((tabuleiro-pai (first node))  ; Pega o tabuleiro-pai do nó completo
-         (operacao (second node)))     ; Pega a operação do nó completo
-    (if (null tabuleiro-pai)  ; Se o tabuleiro pai é nil, retornamos o caminho
+  (let* ((node-pai (first node))  ; Pega o tabuleiro-pai do nó completo
+         (operacao (second node)))  ; Pega a operação do nó completo
+    (if (null node-pai)  ; Se o tabuleiro pai é nil, retornamos o caminho
         solucao   ; O caminho deve ser invertido, pois estamos acumulando as operações em ordem reversa
-        (progn
-          (dolist (n fechados)  ; Itera sobre os nós em fechados
-  (when (equal (third n) (first node))  ; Verifica se o tabuleiro-pai do nó em fechados é igual ao node
-    (return (caminho n  ; Chama recursivamente com o nó pai
-                      fechados
-                      (cons operacao solucao)))))  ; Adiciona a operação ao caminho
-))))  ; Adiciona a operação ao caminho
-
-
-
-
-
+        (caminho node-pai  ; Chama recursivamente com o nó pai
+                 fechados
+                 (cons operacao solucao)))))  ; Adiciona a operação ao caminho
 
 
 (defun gerar-filhos (node &optional (linha 0) (coluna 0) (resultados '()))
@@ -57,7 +47,8 @@
             (let* ((tabuleiro-pai node)
                    (operacao (list linha coluna))
                    (filho (operador linha coluna matriz))
-                   (resultado (list tabuleiro-pai operacao filho)))
+                   (custo (+ (fourth node) 1))
+                   (resultado (list tabuleiro-pai operacao filho custo)))
               (gerar-filhos node nova-linha nova-coluna (cons resultado resultados)))
           (gerar-filhos node nova-linha nova-coluna resultados)))))) ; Avançar para a próxima célula.
 
