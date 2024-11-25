@@ -12,12 +12,32 @@
         (setq abertos (rest abertos))  ; Remove o nó atual da lista de abertos
         (push node fechados)  ; Adiciona o nó atual à lista de fechados
         (if (tabuleiro-vaziop (third node))  ; Verifica se é o objetivo
-            (return node))  ; Retorna o nó objetivo
+            (return (caminho node fechados)))  ; Retorna o caminho completo até o objetivo
         (let ((sucessores (gerar-filhos (third node))))  ; Gera sucessores
           (dolist (s sucessores)  ; Itera sobre cada sucessor
             (unless (or (member (third s) (mapcar #'third abertos) :test #'equal)  ; Verifica se está em abertos
                         (member (third s) (mapcar #'third fechados) :test #'equal))  ; Verifica se está em fechados
-              (push s abertos))))))))  ; Adiciona o sucessor ao início da lista abertos
+              (setq abertos (append abertos (list s))))))))))
+
+
+
+(defun caminho (node fechados &optional (solucao '()))
+  (let* ((tabuleiro-pai (first node))  ; Pega o tabuleiro-pai do nó completo
+         (operacao (second node)))     ; Pega a operação do nó completo
+    (if (null tabuleiro-pai)  ; Se o tabuleiro pai é nil, retornamos o caminho
+        solucao   ; O caminho deve ser invertido, pois estamos acumulando as operações em ordem reversa
+        (progn
+          (dolist (n fechados)  ; Itera sobre os nós em fechados
+  (when (equal (third n) (first node))  ; Verifica se o tabuleiro-pai do nó em fechados é igual ao node
+    (return (caminho n  ; Chama recursivamente com o nó pai
+                      fechados
+                      (cons operacao solucao)))))  ; Adiciona a operação ao caminho
+))))  ; Adiciona a operação ao caminho
+
+
+
+
+
 
 
 (defun gerar-filhos (matriz &optional (linha 0) (coluna 0) (resultados '()))
