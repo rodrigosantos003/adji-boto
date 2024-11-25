@@ -7,17 +7,17 @@
         (fechados '()))                           ; Inicializa a lista de fechados
     (loop
        (if (null abertos)  ; Se a lista de abertos estiver vazia, termine a busca
-          (return nil))   ; Não encontrou o objetivo
+           (return nil))   ; Não encontrou o objetivo
       (let ((node (first abertos)))  ; Pega o primeiro nó da lista de abertos
         (setq abertos (rest abertos))  ; Remove o nó atual da lista de abertos
         (push node fechados)  ; Adiciona o nó atual à lista de fechados
+        (if (tabuleiro-vaziop (third node))  ; Verifica se é o objetivo
+            (return node))  ; Retorna o nó objetivo
         (let ((sucessores (gerar-filhos (third node))))  ; Gera sucessores
-          (loop for s in sucessores
-                when (tabuleiro-vaziop (third s))  ; Verifica se é o objetivo
-                  do (return s)  ; Retorna o nó objetivo
-                unless (or (member (third s) (mapcar #'third abertos) :test #'equal)  ; Verifica se está em abertos
-                           (member (third s) (mapcar #'third fechados) :test #'equal))  ; Verifica se está em fechados
-                  do (setq abertos (append abertos s))))))))
+          (dolist (s sucessores)  ; Itera sobre cada sucessor
+            (unless (or (member (third s) (mapcar #'third abertos) :test #'equal)  ; Verifica se está em abertos
+                        (member (third s) (mapcar #'third fechados) :test #'equal))  ; Verifica se está em fechados
+              (push s abertos))))))))  ; Adiciona o sucessor ao início da lista abertos
 
 
 (defun gerar-filhos (matriz &optional (linha 0) (coluna 0) (resultados '()))
