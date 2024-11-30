@@ -2,7 +2,9 @@
 ;;;; Alogritmos de porcura
 ;;;; Autores: Rodrigo Santos e João Fernandes
 
+;; Travessias
 (defun bfs (tabuleiro)
+  "Pesquisa em largura"
   (let ((abertos (list (list nil nil tabuleiro 0)))  ; Inicializa a lista de abertos
         (fechados '()))                           ; Inicializa a lista de fechados
     (loop
@@ -19,6 +21,25 @@
                         (member (third s) (mapcar #'third fechados) :test #'equal))  ; Verifica se está em fechados
               (setq abertos (append abertos (list s))))))))))
 
+(defun dfs (tabuleiro max-level)
+  "Pesquisa em profundidade"
+  (let ((abertos (list (list nil nil tabuleiro 0)))  ; Inicializa a lista de abertos (stack)
+        (fechados '()))                           ; Inicializa a lista de fechados
+    (loop
+       (if (null abertos)  ; Se a lista de abertos estiver vazia, termine a busca
+           (return nil))   ; Não encontrou o objetivo
+      (let ((node (first abertos)))  ; Pega o primeiro nó da lista de abertos
+        (setq abertos (rest abertos))  ; Remove o nó atual da lista de abertos
+        (push node fechados)  ; Adiciona o nó atual à lista de fechados
+        (if (tabuleiro-vaziop (third node))  ; Verifica se é o objetivo
+            (return (caminho node fechados)))  ; Retorna o caminho completo até o objetivo
+        (when (< (fourth node) max-level)  ; Verifica se a profundidade atual é menor que max-level
+          (let ((sucessores (gerar-filhos node)))  ; Gera sucessores
+            (dolist (s sucessores)  ; Itera sobre cada sucessor
+              (unless (or (member (third s) (mapcar #'third abertos) :test #'equal)  ; Verifica se está em abertos
+                          (member (third s) (mapcar #'third fechados) :test #'equal))  ; Verifica se está em fechados
+                (setq abertos (cons s abertos)))))))))) ; Adiciona ao início da lista
+
 
 (defun caminho (node fechados &optional (solucao '()))
   (let* ((node-pai (first node))  ; Pega o tabuleiro-pai do nó completo
@@ -29,7 +50,7 @@
                  fechados
                  (cons operacao solucao)))))  ; Adiciona a operação ao caminho
 
-
+;; Geração de sucessores
 (defun gerar-filhos (node &optional (linha 0) (coluna 0) (resultados '()))
   "Gera sucessores de forma recursiva a partir de uma matriz, ignorando células não distribuíveis."
   (let ((matriz (third node)))
@@ -51,9 +72,6 @@
                    (resultado (list tabuleiro-pai operacao filho custo)))
               (gerar-filhos node nova-linha nova-coluna (cons resultado resultados)))
           (gerar-filhos node nova-linha nova-coluna resultados)))))) ; Avançar para a próxima célula.
-
-
-
 
 (defun celula-distribuivelp (linha coluna matriz)
   "Retorna T se a célula tem peças suficientes para uma distribuição válida."
