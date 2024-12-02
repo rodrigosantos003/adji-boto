@@ -111,28 +111,23 @@
         (incrementar-posicoes (rest posicoes) ; Chamada recursiva com a cauda da lista
                                (incrementar-posicao l c tabuleiro))))) ; Incrementa a célula
 
-(defun gerar-lista-operadores (tabuleiro &optional linha coluna)
-  "Gera sucessores de forma recursiva a partir de uma matriz, ignorando células não distribuíveis."
-  (let ((matriz (third node)))
-    (if (>= linha (length matriz)) ; Se percorremos todas as linhas, terminar.
-        resultados
-      (let ((nova-linha (if (>= coluna (length (nth linha matriz)))
-                            (1+ linha)
-                          linha))
-            (nova-coluna (if (>= coluna (length (nth linha matriz)))
-                             0
-                           (1+ coluna))))
-        (if (and (< linha (length matriz)) ; Validar que ainda estamos na matriz.
-                 (< coluna (length (nth linha matriz)))
-                 (celula-distribuivelp linha coluna matriz))
-            (let* ((tabuleiro-pai node)
-                   (operacao (list linha coluna))
-                   (filho (operador linha coluna matriz))
-                   (custo (+ (fourth node) 1))
-                   (heuristica (if fHeuristica
-                                   (funcall fHeuristica filho)
-                                 0))
-                   (resultado (list tabuleiro-pai operacao filho custo heuristica)))
-              (gerar-filhos node nova-linha nova-coluna (cons resultado resultados)))
-          (gerar-filhos node nova-linha nova-coluna resultados)))))) ; Avançar para a próxima célula.
-)
+(defun gerar-lista-operadores (tabuleiro &optional (linha 0) (coluna 0) (resultados '()))
+  (if (>= linha (length tabuleiro)) ; Se percorremos todas as linhas, terminar.
+      resultados
+    (let ((nova-linha (if (>= coluna (length (nth linha tabuleiro)))
+                          (1+ linha)
+                        linha))
+          (nova-coluna (if (>= coluna (length (nth linha tabuleiro)))
+                           0
+                         (1+ coluna))))
+      (if (and (< linha (length tabuleiro)) ; Validar que ainda estamos na matriz.
+               (< coluna (length (nth linha tabuleiro)))
+               (celula-distribuivelp linha coluna tabuleiro))
+          (let ((resultado (list linha coluna))) ; Aqui, cria-se a lista diretamente.
+            (gerar-lista-operadores tabuleiro nova-linha nova-coluna (cons resultado resultados)))
+        (gerar-lista-operadores tabuleiro nova-linha nova-coluna resultados)))))
+
+(defun celula-distribuivelp (linha coluna matriz)
+  "Retorna T se a célula tem peças suficientes para uma distribuição válida."
+  (let ((valor (celula linha coluna matriz)))
+    (and (> valor 0) t)))
