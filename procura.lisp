@@ -3,42 +3,40 @@
 ;;;; Autores: Rodrigo Santos e João Fernandes
 
 ;; Travessias
-(defun bfs (tabuleiro)
-  "Pesquisa em largura"
-  (let ((abertos (list (list nil nil tabuleiro 0)))  ; Inicializa a lista de abertos
-        (fechados '()))                           ; Inicializa a lista de fechados
-    (loop
-       (if (null abertos)  ; Se a lista de abertos estiver vazia, termine a busca
-           (return nil))   ; Não encontrou o objetivo
-      (let ((node (first abertos)))  ; Pega o primeiro nó da lista de abertos
-        (setq abertos (rest abertos))  ; Remove o nó atual da lista de abertos
-        (push node fechados)  ; Adiciona o nó atual à lista de fechados
-        (if (tabuleiro-vaziop (third node))  ; Verifica se é o objetivo
-            (return (caminho node fechados)))  ; Retorna o caminho completo até o objetivo
-        (let ((sucessores (gerar-filhos node)))  ; Gera sucessores
-          (dolist (s sucessores)  ; Itera sobre cada sucessor
-            (unless (or (member (third s) (mapcar #'third abertos) :test #'equal)  ; Verifica se está em abertos
-                        (member (third s) (mapcar #'third fechados) :test #'equal))  ; Verifica se está em fechados
-              (setq abertos (append abertos (list s))))))))))
+(defun bfs (tabuleiro &optional (abertos (list (list nil nil tabuleiro 0))) (fechados '()))
+  "Pesquisa em largura funcional puramente recursiva"
+  (if (null abertos) nil  ; Caso a lista de abertos esteja vazia, então não encontrou o objetivo
+      (let* ((node (first abertos))  ; Primeiro nó (nó a ser processado)
+             (novo-abertos (rest abertos))  ; Remove o nó atual dos abertos
+             (novo-fechados (cons node fechados)))  ; Adiciona o nó atual aos fechados
+            (let* ((sucessores (gerar-filhos node))  ; Gera sucessores
+                   (filtrados (filter-sucessores sucessores novo-abertos novo-fechados))  ; Filtra sucessores não visitados
+                   (novos-abertos (append novo-abertos filtrados))  ; Adiciona novos sucessores aos abertos
+                   (no-objetivo (filtrar-nos-objetivos sucessores)))
+              (if (not (null no-objetivo))  ; Verifica se é o objetivo
+                  (caminho no-objetivo novo-fechados)  ; Retorna o caminho
+              (bfs nil novos-abertos novo-fechados))))))  ; Chamada recursiva
 
-(defun dfs (tabuleiro max-level)
-  "Pesquisa em profundidade"
-  (let ((abertos (list (list nil nil tabuleiro 0)))  ; Inicializa a lista de abertos (stack)
-        (fechados '()))                           ; Inicializa a lista de fechados
-    (loop
-       (if (null abertos)  ; Se a lista de abertos estiver vazia, termine a busca
-           (return nil))   ; Não encontrou o objetivo
-      (let ((node (first abertos)))  ; Pega o primeiro nó da lista de abertos
-        (setq abertos (rest abertos))  ; Remove o nó atual da lista de abertos
-        (push node fechados)  ; Adiciona o nó atual à lista de fechados
-        (if (tabuleiro-vaziop (third node))  ; Verifica se é o objetivo
-            (return (caminho node fechados)))  ; Retorna o caminho completo até o objetivo
-        (when (< (fourth node) max-level)  ; Verifica se a profundidade atual é menor que max-level
-          (let ((sucessores (gerar-filhos node)))  ; Gera sucessores
-            (dolist (s sucessores)  ; Itera sobre cada sucessor
-              (unless (or (member (third s) (mapcar #'third abertos) :test #'equal)  ; Verifica se está em abertos
-                          (member (third s) (mapcar #'third fechados) :test #'equal))  ; Verifica se está em fechados
-                (setq abertos (cons s abertos)))))))))) ; Adiciona ao início da lista
+(defun filter-sucessores (sucessores abertos fechados)
+  "Filtra sucessores que não estão em abertos ou fechados"
+  (if (null sucessores)
+      nil
+      (let* ((s (first sucessores))
+             (rest-sucessores (rest sucessores)))
+        (if (or (member (third s) (mapcar #'third abertos) :test #'equal)
+                (member (third s) (mapcar #'third fechados) :test #'equal))
+            (filter-sucessores rest-sucessores abertos fechados)  ; Ignora o sucessor
+            (cons s (filter-sucessores rest-sucessores abertos fechados))))))  ; Inclui o sucessor que não foi visitado
+
+(defun filtrar-nos-objetivos (sucessores)
+  "Retorna o primeiro nó objetivo (tabuleiro vazio) encontrado na lista de sucessores."
+  (if (null sucessores)
+      nil  ; Caso base: lista vazia, retorna nil
+      (let* ((nó (first sucessores))  ; Pega o primeiro sucessor
+             (rest-sucessores (rest sucessores)))  ; Restante da lista
+        (if (tabuleiro-vaziop (third nó))  ; Verifica se é o nó objetivo
+            nó  ; Retorna o nó objetivo imediatamente
+            (filtrar-nos-objetivos rest-sucessores)))))  ; Continua a busca nos sucessores restantes
 
 
 (defun caminho (node fechados &optional (solucao '()))
@@ -51,7 +49,7 @@
                  (cons operacao solucao)))))  ; Adiciona a operação ao caminho
 
 ;; Geração de sucessores
-(defun gerar-filhos (node &optional (linha 0) (coluna 0) (resultados '()))
+(defun gerar-filhos (node &optional (linha 0) (coluna 0) (resultados '()) (fHeuristica))
   "Gera sucessores de forma recursiva a partir de uma matriz, ignorando células não distribuíveis."
   (let ((matriz (third node)))
     (if (>= linha (length matriz)) ; Se percorremos todas as linhas, terminar.
@@ -69,7 +67,10 @@
                    (operacao (list linha coluna))
                    (filho (operador linha coluna matriz))
                    (custo (+ (fourth node) 1))
-                   (resultado (list tabuleiro-pai operacao filho custo)))
+                   (heuristica (if fHeuristica
+                                   (funcall fHeuristica filho)
+                                 0))
+                   (resultado (list tabuleiro-pai operacao filho custo heuristica)))
               (gerar-filhos node nova-linha nova-coluna (cons resultado resultados)))
           (gerar-filhos node nova-linha nova-coluna resultados)))))) ; Avançar para a próxima célula.
 
