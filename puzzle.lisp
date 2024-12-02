@@ -85,7 +85,7 @@
 )
 
 
-(defun operador (linha-idx col-idx tabuleiro)
+(defun aplicar-operador (tabuleiro linha-idx col-idx)
   "Aplica o operador às peças do buraco especificado."
   (let* ((pecas-a-retirar (celula linha-idx col-idx tabuleiro))
          (tabuleiro-sem-pecas (substituir linha-idx col-idx tabuleiro 0))
@@ -111,21 +111,23 @@
         (incrementar-posicoes (rest posicoes) ; Chamada recursiva com a cauda da lista
                                (incrementar-posicao l c tabuleiro))))) ; Incrementa a célula
 
-(defun gerar-lista-operadores (tabuleiro &optional (linha 0) (coluna 0) (resultados '()))
-  (if (>= linha (length tabuleiro)) ; Se percorremos todas as linhas, terminar.
-      resultados
+(defun gerar-operadores (tabuleiro &optional (linha 0) (coluna 0) (resultados '()))
+  (if (>= linha (length tabuleiro)) ; Verifica se todas as linhas foram percorridas.
+      (reverse resultados)          ; Retorna os resultados em ordem.
     (let ((nova-linha (if (>= coluna (length (nth linha tabuleiro)))
                           (1+ linha)
                         linha))
           (nova-coluna (if (>= coluna (length (nth linha tabuleiro)))
                            0
                          (1+ coluna))))
-      (if (and (< linha (length tabuleiro)) ; Validar que ainda estamos na matriz.
+      (if (and (< linha (length tabuleiro)) ; Verifica se ainda está dentro da matriz.
                (< coluna (length (nth linha tabuleiro)))
-               (celula-distribuivelp linha coluna tabuleiro))
-          (let ((resultado (list linha coluna))) ; Aqui, cria-se a lista diretamente.
-            (gerar-lista-operadores tabuleiro nova-linha nova-coluna (cons resultado resultados)))
-        (gerar-lista-operadores tabuleiro nova-linha nova-coluna resultados)))))
+               (celula-distribuivelp linha coluna tabuleiro)) ; Condição customizável.
+          (gerar-operadores tabuleiro nova-linha nova-coluna
+           (cons (lambda (tabuleiro) (aplicar-operador tabuleiro linha coluna))
+                 resultados)) ; Adiciona o lambda à lista.
+        (gerar-operadores tabuleiro nova-linha nova-coluna resultados)))))
+
 
 (defun celula-distribuivelp (linha coluna matriz)
   "Retorna T se a célula tem peças suficientes para uma distribuição válida."

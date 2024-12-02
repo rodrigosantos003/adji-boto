@@ -49,28 +49,14 @@
                  (cons operacao solucao)))))  ; Adiciona a operação ao caminho
 
 ;; Geração de sucessores
-(defun gerar-filhos (node &optional (linha 0) (coluna 0) (resultados '()) (fHeuristica))
-  "Gera sucessores de forma recursiva a partir de uma matriz, ignorando células não distribuíveis."
-  (let ((matriz (third node)))
-    (if (>= linha (length matriz)) ; Se percorremos todas as linhas, terminar.
-        resultados
-      (let ((nova-linha (if (>= coluna (length (nth linha matriz)))
-                            (1+ linha)
-                          linha))
-            (nova-coluna (if (>= coluna (length (nth linha matriz)))
-                             0
-                           (1+ coluna))))
-        (if (and (< linha (length matriz)) ; Validar que ainda estamos na matriz.
-                 (< coluna (length (nth linha matriz)))
-                 (celula-distribuivelp linha coluna matriz))
-            (let* ((tabuleiro-pai node)
-                   (operacao (list linha coluna))
-                   (filho (operador linha coluna matriz))
-                   (custo (+ (fourth node) 1))
-                   (heuristica (if fHeuristica
-                                   (funcall fHeuristica filho)
-                                 0))
-                   (resultado (list tabuleiro-pai operacao filho custo heuristica)))
-              (gerar-filhos node nova-linha nova-coluna (cons resultado resultados)))
-          (gerar-filhos node nova-linha nova-coluna resultados)))))) ; Avançar para a próxima célula.
+(defun cria-no (estado &optional (custo 0) (pai nil))
+  (list estado custo pai)
+)
 
+(defun novo-sucessor (no operador)
+  (cria-no (funcall operador (first no)) (second no) no)
+)
+
+(defun sucessores (no operadores)
+  (mapcar (lambda (op) (novo-sucessor no op)) operadores)
+)
