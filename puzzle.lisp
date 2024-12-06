@@ -12,15 +12,14 @@
 
 (defun tabuleiro-teste ()
   "Retorna um tabuleiro de teste 2x6 que corresponde ao tabuleiro d) do enunciado do projeto"
-  '((1 2 3 4 5 6)
-    (6 5 4 3 2 1))
+  '((0 0 0 0 0 0)
+    (0 0 0 0 1 2))
 )
 
 (defun tabuleiro-inicial()
  '((8 8 8 8 8 8)
  (8 8 8 8 8 8))
 )
-
 
 ;;; Seletores
 
