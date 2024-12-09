@@ -132,5 +132,3 @@
   "Retorna T se a célula tem peças suficientes para uma distribuição válida."
   (let ((valor (celula linha coluna matriz)))
     (and (> valor 0) t)))
-
-(defun 

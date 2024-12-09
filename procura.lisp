@@ -34,15 +34,21 @@
             ;; Se atingiu o limite, continua para o próximo nó
             (dfs estado limite abertos-sem-node novo-fechados)
             (let* ((sucessores-validos (mapcar
-                                        (lambda (sucessor)
-                                          (if (not (lista-tem-no sucessor abertos))
-                                              sucessor)  ; Retorna o sucessor se for válido
-                                        (sucessores node (gerar-operadores (first node))))))  ; Aplica o filtro a todos os sucessores
-                   (novos-abertos (append abertos-sem-node sucessores-validos))  ; Remove sucessores inválidos
-                   (no-objetivo (filtrar-nos-objetivos sucessores-validos)))  ; Filtra os nós objetivo
+                     (lambda (sucessor)
+                       (if (not (lista-tem-no sucessor abertos))
+                           sucessor))
+                     (sucessores node (gerar-operadores (first node))))) ; Aplica o filtro a todos os sucessores
+                   (fechados-atualizado (substituir-nodes-com-menor-custo novo-fechados sucessores-validos))
+                   (sucessores-filtrados (mapcar
+                       (lambda (sucessor)
+                         (if (not (lista-tem-no sucessor fechados-atualizado))
+                             sucessor))
+                       sucessores-validos))
+                   (novos-abertos (append sucessores-filtrados abertos-sem-node))  ; Remove sucessores inválidos
+                   (no-objetivo (filtrar-nos-objetivos sucessores-filtrados)))  ; Filtra os nós objetivo
               (if (not (null no-objetivo))
-                  (caminho no-objetivo novo-fechados)  ; Retorna o caminho se encontrou o objetivo
-                  (dfs estado limite novos-abertos novo-fechados)))))))
+                  (caminho no-objetivo fechados-atualizado)  ; Retorna o caminho se encontrou o objetivo
+                  (dfs estado limite novos-abertos fechados-atualizado)))))))
 
 
 
@@ -100,11 +106,11 @@
   "Substitui os elementos na lista original por novos elementos se o estado for o mesmo e o custo for menor."
   (mapcar (lambda (elemento)
             (let ((estado-original (first elemento))  ; Estado do elemento original
-                  (custo-original (second elemento)))  ; Custo do elemento original
+                  (custo-original (fourth elemento)))  ; Custo do elemento original
               (let ((melhor-elemento
                      (find estado-original novos-elementos :key #'first :test #'equal)))  ; Encontra o novo elemento com o mesmo estado
                 (if (and melhor-elemento  ; Se encontrou um novo elemento com o mesmo estado
-                         (< (second melhor-elemento) custo-original))  ; E o custo do novo elemento é menor
+                         (< (fourth melhor-elemento) custo-original))  ; E o custo do novo elemento é menor
                     melhor-elemento  ; Substitui pelo novo elemento
                     elemento))))  ; Caso contrário, mantém o elemento original
           lista))
