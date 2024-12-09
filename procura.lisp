@@ -3,62 +3,61 @@
 ;;;; Autores: Rodrigo Santos e João Fernandes
 
 ;; Travessias
-(defun bfs (estado &optional (abertos (list (cria-no estado))) (fechados '()))
+(defun bfs (estadoInicial &optional (abertos (list (cria-no estadoInicial))) (fechados '()))
   "Pesquisa em largura funcional puramente recursiva"
   (if (null abertos) 
       nil  ; Caso a lista de abertos esteja vazia, então não encontrou o objetivo
-      (let* ((node (first abertos))  ; Primeiro nó (nó a ser processado)
-             (abertos-sem-node (rest abertos))  ; Remove o nó atual dos abertos
-             (novo-fechados (cons node fechados))  ; Adiciona o nó atual aos fechados
+      (let* ((no (first abertos))  ; Primeiro nó (nó a ser processado)
+             (abertos-sem-no (rest abertos))  ; Remove o nó atual dos abertos
+             (novo-fechados (cons no fechados))  ; Adiciona o nó atual aos fechados
              (sucessores-validos (mapcar
                                 (lambda (sucessor)
                                   (if (and (not (lista-tem-no sucessor abertos)) 
                                            (not (lista-tem-no sucessor fechados)))
                                       sucessor))  ; Retorna o sucessor se for válido
-                                (sucessores node (gerar-operadores (first node)))))  ; Aplica o filtro a todos os sucessores
-             (novo-abertos (append abertos-sem-node sucessores-validos))  ; Remove os nil e adiciona aos abertos
+                                (sucessores no (gerar-operadores (estado no)))))  ; Aplica o filtro a todos os sucessores
+             (novo-abertos (append abertos-sem-no sucessores-validos))  ; Remove os nil e adiciona aos abertos
              (no-objetivo (filtrar-nos-objetivos sucessores-validos)))  ; Filtra os nós objetivo
 (if (not (null no-objetivo))  ; Verifica se é o objetivo
             (caminho no-objetivo novo-fechados)  ; Retorna o caminho
             (bfs nil novo-abertos novo-fechados)))))  ; Chamada recursiva
 
-(defun dfs (estado &optional (limite most-positive-fixnum) (abertos (list (cria-no estado 0))) (fechados '()))
+(defun dfs (estadoInicial &optional (limite most-positive-fixnum) (abertos (list (cria-no estadoInicial 0))) (fechados '()))
   "Pesquisa em profundidade limitada com verificação de custo."
   (if (null abertos)
       nil  ; Caso a lista de abertos esteja vazia, não encontrou o objetivo
-      (let* ((node (first abertos))  ; Primeiro nó (nó a ser processado)
-             (profundidade (second node))  ; Profundidade do nó atual
-             (abertos-sem-node (rest abertos))  ; Remove o nó atual dos abertos
-             (novo-fechados (cons node fechados)))  ; Adiciona o nó atual aos fechados
+      (let* ((no (first abertos))  ; Primeiro nó (nó a ser processado)
+             (profundidade (nivel no))  ; Profundidade do nó atual
+             (abertos-sem-no (rest abertos))  ; Remove o nó atual dos abertos
+             (novo-fechados (cons no fechados)))  ; Adiciona o nó atual aos fechados
         (if (>= profundidade limite)
             ;; Se atingiu o limite, continua para o próximo nó
-            (dfs estado limite abertos-sem-node novo-fechados)
+            (dfs nil limite abertos-sem-no novo-fechados)
             (let* ((sucessores-validos (mapcar
                      (lambda (sucessor)
                        (if (not (lista-tem-no sucessor abertos))
                            sucessor))
-                     (sucessores node (gerar-operadores (first node))))) ; Aplica o filtro a todos os sucessores
+                     (sucessores no (gerar-operadores (estado no))))) ; Aplica o filtro a todos os sucessores
                    (fechados-atualizado (substituir-nodes-com-menor-custo novo-fechados sucessores-validos))
                    (sucessores-filtrados (mapcar
                        (lambda (sucessor)
                          (if (not (lista-tem-no sucessor fechados-atualizado))
                              sucessor))
                        sucessores-validos))
-                   (novos-abertos (append sucessores-filtrados abertos-sem-node))  ; Remove sucessores inválidos
+                   (novos-abertos (append sucessores-filtrados abertos-sem-no))  ; Remove sucessores inválidos
                    (no-objetivo (filtrar-nos-objetivos sucessores-filtrados)))  ; Filtra os nós objetivo
               (if (not (null no-objetivo))
                   (caminho no-objetivo fechados-atualizado)  ; Retorna o caminho se encontrou o objetivo
-                  (dfs estado limite novos-abertos fechados-atualizado)))))))
+                  (dfs nil limite novos-abertos fechados-atualizado)))))))
 
-
-(defun a-star (estado fHeuristica &optional (abertos (list (cria-no estado))) (fechados '()))
+(defun a-star (estadoInicial fHeuristica &optional (abertos (list (cria-no estadoInicial))) (fechados '()))
   "Pesquisa em largura funcional puramente recursiva"
   (if (null abertos) nil  ; Caso a lista de abertos esteja vazia, então não encontrou o objetivo
-      (let* ((node (first abertos))  ; Primeiro nó (nó a ser processado)
+      (let* ((no (first abertos))  ; Primeiro nó (nó a ser processado)
              (novo-abertos (rest abertos))  ; Remove o nó atual dos abertos
-             (novo-fechados (cons node fechados)))  ; Adiciona o nó atual aos fechados
-             (if (tabuleiro-vaziop (first node)) (caminho node novo-fechados)
-             (let* ((sucessores-gerados (sucessores node (gerar-operadores (first node)) fHeuristica)) ; Gera sucessores
+             (novo-fechados (cons no fechados)))  ; Adiciona o nó atual aos fechados
+             (if (tabuleiro-vaziop (estado no)) (caminho no novo-fechados)
+             (let* ((sucessores-gerados (sucessores no (gerar-operadores (estado no)) fHeuristica)) ; Gera sucessores
                    (abertos-filtrados (remover-nodes-com-maior-custo novo-abertos sucessores-gerados))
                    (fechados-filtrados (remover-nodes-com-maior-custo novo-fechados sucessores-gerados))
                    (sucessores-validos (mapcar
@@ -69,19 +68,8 @@
                    (novos-abertos (inserir-nodes abertos-filtrados sucessores-validos)))  ; Adiciona novos sucessores aos abertos
                    (a-star nil fHeuristica novos-abertos fechados-filtrados))))))
 
-(defun filter-sucessores (sucessores abertos fechados)
-  "Filtra sucessores que não estão em abertos ou fechados"
-  (if (null sucessores)
-      nil
-      (let* ((s (first sucessores))
-             (rest-sucessores (rest sucessores)))
-        (if (or (member (third s) (mapcar #'third abertos) :test #'equal)
-                (member (third s) (mapcar #'third fechados) :test #'equal))
-            (filter-sucessores rest-sucessores abertos fechados)  ; Ignora o sucessor
-            (cons s (filter-sucessores rest-sucessores abertos fechados))))))  ; Inclui o sucessor que não foi visitado
-
 (defun lista-tem-no (node lista)
-  (member (first node) (mapcar #'first lista) :test #'equal)
+  (member (estado node) (mapcar #'estado lista) :test #'equal)
 )
 
 (defun filtrar-nos-objetivos (sucessores)
@@ -94,17 +82,17 @@
             node  ; Retorna o nó objetivo imediatamente
             (filtrar-nos-objetivos rest-sucessores)))))  ; Continua a busca nos sucessores restantes
 
-(defun inserir-nodes (novos-nodes lista)
+(defun inserir-nodes (novos-nos lista)
   "Insere todos os nodes da lista 'novos-nodes' na lista 'lista', mantendo a ordem por custo."
-  (if (null novos-nodes)  ; Caso base: se não houver novos nodes para processar
+  (if (null novos-nos)  ; Caso base: se não houver novos nodes para processar
       lista               ; Retorna a lista original
-      (let ((node (first novos-nodes))  ; Pega o primeiro node de novos-nodes
-            (custo (fourth (first novos-nodes)))) ; Custo do node atual
+      (let ((no (first novos-nos))  ; Pega o primeiro node de novos-nodes
+            (custoAtual (custo (first novos-nos)))) ; Custo do node atual
         (if (or (null lista)  ; Se a lista estiver vazia
-                (< custo (fourth (first lista)))) ; Ou se o custo do novo node for menor que o do primeiro elemento da lista
-            (cons node (inserir-nodes (rest novos-nodes) lista)) ; Insere o node no início
+                (< custoAtual (custo (first lista)))) ; Ou se o custo do novo node for menor que o do primeiro elemento da lista
+            (cons no (inserir-nodes (rest novos-nos) lista)) ; Insere o node no início
             (cons (first lista) ; Mantém o primeiro elemento da lista
-                  (inserir-nodes novos-nodes (rest lista))))))) ; Continua com o resto da lista
+                  (inserir-nodes novos-nos (rest lista))))))) ; Continua com o resto da lista
 
 
 (defun substituir-nodes-com-menor-custo (lista novos-elementos)
@@ -137,39 +125,48 @@
             (remover-nodes-com-maior-custo (cdr lista) novos-elementos)))))
 
 
-(defun caminho (node fechados &optional (solucao '()))
-  (let* ((node-pai (third node))
-         (estado (first node)))
-    (if (null node-pai)
-        (cons node solucao)
-        (caminho node-pai
+(defun caminho (no fechados &optional (solucao '()))
+  (let* ((no-pai (pai no))
+         (no-estado (estado no)))
+    (if (null no-pai)
+        (cons no solucao)
+        (caminho no-pai
                 fechados
-                (cons node solucao)))))
+                (cons no solucao)))))
+
+(defun estado (no) (first no))
+
+(defun nivel (no) (second no))
+
+(defun pai (no) (third no))
+
+(defun custo (no) (fourth no))
 
 ;; Geração de sucessores
-(defun cria-no (estado &optional (custo 0) (pai nil) (heuristica 0))
-  (list estado custo pai (+ heuristica custo))
+(defun cria-no (estadoNo &optional (nivelNo 0) (paiNo nil) (heuristicaNo 0))
+  (list estadoNo nivelNo paiNo (+ heuristicaNo nivelNo))
 )
 
 (defun novo-sucessor (no operador &optional (heuristica nil))
-  (cria-no (funcall operador (first no)) (1+ (second no)) no (if (null heuristica) 0 (funcall heuristica no)))
+  (cria-no (funcall operador (estado no)) (1+ (nivel no)) no (if (null heuristica) 0 (funcall heuristica no)))
 )
 
 (defun sucessores (no operadores &optional (heuristica nil))
   (mapcar (lambda (op) (novo-sucessor no op heuristica)) operadores)
 )
 
-(defun substituir-no (lista novoNode)
+(defun substituir-no (lista novoNo)
   "Substitui um nó na lista se o estado for igual e a heurística do novo nó for menor."
-  (let* ((novo-estado (first novoNode))       ;; O estado do novoNode
-         (nova-heuristica (fourth novoNode))) ;; A heurística do novoNode
+  (let* ((novo-estado (estado novoNo))       ;; O estado do novoNo
+         (nova-heuristica (custo novoNo))) ;; A heurística do novoNo
     (mapcar (lambda (no)
-              (if (and (equal (first no) novo-estado)  ;; Estados iguais
-                       (> (fourth no) nova-heuristica)) ;; Heurística maior
-                  novoNode  ;; Substitui o nó pelo novoNode
+              (if (and (equal (estado no) novo-estado)  ;; Estados iguais
+                       (> (custo no) nova-heuristica)) ;; Heurística maior
+                  novoNo  ;; Substitui o nó pelo novoNode
                   no))      ;; Caso contrário, mantém o nó original
             lista)))
 
-(defun heuristica-teste (elemento)
- 1
-)
+(defun raiz (no)
+  (if (null (pai no))   ; Se o nó atual não tem pai, é a raiz
+      no
+      (raiz (pai no)))) ; Caso contrário, suba para o pai

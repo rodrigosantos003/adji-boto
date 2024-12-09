@@ -132,3 +132,14 @@
   "Retorna T se a célula tem peças suficientes para uma distribuição válida."
   (let ((valor (celula linha coluna matriz)))
     (and (> valor 0) t)))
+
+(defun soma-pecas (tabuleiro)
+ (+ (apply '+ (first tabuleiro)) (apply '+ (second tabuleiro)))
+)
+
+(defun heuristicaBase (no)
+  (let* ((noRaiz (raiz no))
+         (pecas-no (soma-pecas (estado no)))
+         (pecas-raiz (soma-pecas (estado noRaiz)))
+         (pecas-capturadas (- pecas-raiz pecas-no)))
+    (- pecas-no pecas-capturadas)))
