@@ -51,10 +51,6 @@
                   (dfs estado limite novos-abertos fechados-atualizado)))))))
 
 
-
-
-
-
 (defun a-star (estado fHeuristica &optional (abertos (list (cria-no estado))) (fechados '()))
   "Pesquisa em largura funcional puramente recursiva"
   (if (null abertos) nil  ; Caso a lista de abertos esteja vazia, então não encontrou o objetivo
@@ -62,11 +58,16 @@
              (novo-abertos (rest abertos))  ; Remove o nó atual dos abertos
              (novo-fechados (cons node fechados)))  ; Adiciona o nó atual aos fechados
              (if (tabuleiro-vaziop (first node)) (caminho node novo-fechados)
-             (let* ((sucessores-gerados (sucessores node (gerar-operadores (first node)) fHeuristica))  ; Gera sucessores
-                   (filtrados (filter-sucessores sucessores-gerados novo-abertos novo-fechados))  ; Filtra sucessores não visitados
-                   (novos-abertos (append novo-abertos filtrados))  ; Adiciona novos sucessores aos abertos
-                   (no-objetivo (filtrar-nos-objetivos sucessores-gerados)))
-              (bfs nil novos-abertos novo-fechados))))))  ; Chamada recursiva
+             (let* ((sucessores-gerados (sucessores node (gerar-operadores (first node)) fHeuristica)) ; Gera sucessores
+                   (abertos-filtrados (remover-nodes-com-maior-custo novo-abertos sucessores-gerados))
+                   (fechados-filtrados (remover-nodes-com-maior-custo novo-fechados sucessores-gerados))
+                   (sucessores-validos (mapcar
+                     (lambda (sucessor)
+                       (if (and (not (lista-tem-no sucessor abertos-filtrados)) (not (lista-tem-no sucessor fechados-filtrados)))
+                           sucessor))
+                     sucessores-gerados)) 
+                   (novos-abertos (inserir-nodes abertos-filtrados sucessores-validos)))  ; Adiciona novos sucessores aos abertos
+                   (a-star nil fHeuristica novos-abertos fechados-filtrados))))))
 
 (defun filter-sucessores (sucessores abertos fechados)
   "Filtra sucessores que não estão em abertos ou fechados"
@@ -93,14 +94,18 @@
             node  ; Retorna o nó objetivo imediatamente
             (filtrar-nos-objetivos rest-sucessores)))))  ; Continua a busca nos sucessores restantes
 
-(defun inserir-node (node lista)
-  "Insere um node na lista ordenada por custo (segundo campo do node)."
-  (let ((custo (fourth node))) ; Obtem o segundo campo do node (custo)
-    (if (or (null lista) ; Se a lista for vazia
-            (< custo (fourth (first lista)))) ; Ou se o custo for menor que o custo do primeiro elemento
-        (cons node lista) ; Insere o node no início da lista
-        (cons (first lista) ; Mantém o primeiro elemento e processa o resto da lista
-              (inserir-node node (rest lista))))))
+(defun inserir-nodes (novos-nodes lista)
+  "Insere todos os nodes da lista 'novos-nodes' na lista 'lista', mantendo a ordem por custo."
+  (if (null novos-nodes)  ; Caso base: se não houver novos nodes para processar
+      lista               ; Retorna a lista original
+      (let ((node (first novos-nodes))  ; Pega o primeiro node de novos-nodes
+            (custo (fourth (first novos-nodes)))) ; Custo do node atual
+        (if (or (null lista)  ; Se a lista estiver vazia
+                (< custo (fourth (first lista)))) ; Ou se o custo do novo node for menor que o do primeiro elemento da lista
+            (cons node (inserir-nodes (rest novos-nodes) lista)) ; Insere o node no início
+            (cons (first lista) ; Mantém o primeiro elemento da lista
+                  (inserir-nodes novos-nodes (rest lista))))))) ; Continua com o resto da lista
+
 
 (defun substituir-nodes-com-menor-custo (lista novos-elementos)
   "Substitui os elementos na lista original por novos elementos se o estado for o mesmo e o custo for menor."
@@ -115,16 +120,31 @@
                     elemento))))  ; Caso contrário, mantém o elemento original
           lista))
 
+(defun remover-nodes-com-maior-custo (lista novos-elementos)
+  "Retorna uma nova lista contendo apenas os elementos que não têm custo maior do que elementos equivalentes em novos-elementos."
+  (if (null lista)
+      nil
+      (let* ((elemento (car lista))
+             (estado-original (first elemento))
+             (custo-original (fourth elemento))
+             (melhor-elemento (find estado-original novos-elementos
+                                    :key #'first
+                                    :test #'equal)))
+        (if (or (not melhor-elemento)
+                (>= (fourth melhor-elemento) custo-original))
+            (cons elemento 
+                  (remover-nodes-com-maior-custo (cdr lista) novos-elementos))
+            (remover-nodes-com-maior-custo (cdr lista) novos-elementos)))))
 
 
 (defun caminho (node fechados &optional (solucao '()))
   (let* ((node-pai (third node))
          (estado (first node)))
     (if (null node-pai)
-        (cons estado solucao)
+        (cons node solucao)
         (caminho node-pai
                 fechados
-                (cons estado solucao)))))
+                (cons node solucao)))))
 
 ;; Geração de sucessores
 (defun cria-no (estado &optional (custo 0) (pai nil) (heuristica 0))
@@ -149,3 +169,7 @@
                   novoNode  ;; Substitui o nó pelo novoNode
                   no))      ;; Caso contrário, mantém o nó original
             lista)))
+
+(defun heuristica-teste (elemento)
+ 1
+)
