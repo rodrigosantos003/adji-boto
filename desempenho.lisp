@@ -3,9 +3,17 @@
 ;;; Autores: João Fernandes e Rodrigo Santos
 
 ;; Penetrância
-(defun penetrancia (comprimento-caminho total-nos)
+(defun penetrancia (caminho abertos fechados)
   "Calcula a penetrância de um algortimo (P = L/T)"
-  (/ comprimento-caminho total-nos)
+  (/ (comprimento-caminho caminho) (total-nos abertos fechados))
+)
+
+(defun comprimento-caminho (c)
+  (length c)
+)
+
+(defun total-nos (abertos fechados)
+  (+ (length abertos) (length fechados))
 )
 
 ;; Fator de ramificação

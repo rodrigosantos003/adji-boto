@@ -142,4 +142,4 @@
          (pecas-no (soma-pecas (estado no)))
          (pecas-raiz (soma-pecas (estado noRaiz)))
          (pecas-capturadas (- pecas-raiz pecas-no)))
-    (- pecas-no pecas-capturadas)))
+      (- pecas-no pecas-capturadas)))

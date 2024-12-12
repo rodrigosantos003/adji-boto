@@ -60,12 +60,15 @@
              (let* ((sucessores-gerados (sucessores no (gerar-operadores (estado no)) fHeuristica)) ; Gera sucessores
                    (abertos-filtrados (remover-nodes-com-maior-custo novo-abertos sucessores-gerados))
                    (fechados-filtrados (remover-nodes-com-maior-custo novo-fechados sucessores-gerados))
-                   (sucessores-validos (mapcar
-                     (lambda (sucessor)
-                       (if (and (not (lista-tem-no sucessor abertos-filtrados)) (not (lista-tem-no sucessor fechados-filtrados)))
-                           sucessor))
-                     sucessores-gerados)) 
-                   (novos-abertos (inserir-nodes abertos-filtrados sucessores-validos)))  ; Adiciona novos sucessores aos abertos
+                   (sucessores-validos (reduce 
+                                        (lambda (acc sucessor)
+                                          (if (and (not (lista-tem-no sucessor abertos))
+                                                   (not (lista-tem-no sucessor fechados)))
+                                              (cons sucessor acc)
+                                            acc))
+                                        sucessores-gerados
+                                        :initial-value '()))
+                   (novos-abertos (inserir-nodes sucessores-validos abertos-filtrados)))  ; Adiciona novos sucessores aos abertos
                    (a-star nil fHeuristica novos-abertos fechados-filtrados))))))
 
 (defun lista-tem-no (node lista)
@@ -143,13 +146,18 @@
 (defun custo (no) (fourth no))
 
 ;; Geração de sucessores
-(defun cria-no (estadoNo &optional (nivelNo 0) (paiNo nil) (heuristicaNo 0))
-  (list estadoNo nivelNo paiNo (+ heuristicaNo nivelNo))
-)
+(defun cria-no (estadoNo &optional (nivelNo 0) (paiNo nil) (custoNo 0))
+  (list estadoNo nivelNo paiNo custoNo))
 
 (defun novo-sucessor (no operador &optional (heuristica nil))
-  (cria-no (funcall operador (estado no)) (1+ (nivel no)) no (if (null heuristica) 0 (funcall heuristica no)))
-)
+  (let* ((novo-estado (funcall operador (estado no)))
+         (novo-nivel (1+ (nivel no)))
+         (novo-no (cria-no novo-estado novo-nivel no)))
+    (if (null heuristica)
+        novo-no
+        (let ((custo-total (+ novo-nivel (funcall heuristica novo-no))))
+          (setf (nth 3 novo-no) custo-total)
+          novo-no))))
 
 (defun sucessores (no operadores &optional (heuristica nil))
   (mapcar (lambda (op) (novo-sucessor no op heuristica)) operadores)
