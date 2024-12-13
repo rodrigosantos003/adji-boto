@@ -4,6 +4,7 @@
 
 ;; Travessias
 (defun bfs (estadoInicial &optional (abertos (list (cria-no estadoInicial))) (fechados '()))
+  (resetar-contar-nos)
   "Pesquisa em largura funcional puramente recursiva"
   (if (null abertos) 
       nil  ; Caso a lista de abertos esteja vazia, então não encontrou o objetivo
@@ -24,6 +25,7 @@
 
 (defun dfs (estadoInicial &optional (limite most-positive-fixnum) (abertos (list (cria-no estadoInicial 0))) (fechados '()))
   "Pesquisa em profundidade limitada com verificação de custo."
+  (resetar-contar-nos)
   (if (null abertos)
       nil  ; Caso a lista de abertos esteja vazia, não encontrou o objetivo
       (let* ((no (first abertos))  ; Primeiro nó (nó a ser processado)
@@ -52,6 +54,7 @@
 
 (defun a-star (estadoInicial fHeuristica &optional (abertos (list (cria-no estadoInicial))) (fechados '()))
   "Pesquisa em largura funcional puramente recursiva"
+  (resetar-contar-nos)
   (if (null abertos) nil  ; Caso a lista de abertos esteja vazia, então não encontrou o objetivo
       (let* ((no (first abertos))  ; Primeiro nó (nó a ser processado)
              (novo-abertos (rest abertos))  ; Remove o nó atual dos abertos
@@ -153,11 +156,17 @@
   (let* ((novo-estado (funcall operador (estado no)))
          (novo-nivel (1+ (nivel no)))
          (novo-no (cria-no novo-estado novo-nivel no)))
+    ;; Incrementa o contador de nós gerados
+    (incrementar-nos)
     (if (null heuristica)
         novo-no
         (let ((custo-total (+ novo-nivel (funcall heuristica novo-no))))
-          (setf (nth 3 novo-no) custo-total)
-          novo-no))))
+          ;; Retorna uma nova versão do nó com o custo atualizado
+          (incrementar-nos)  ;; Incrementa novamente ao criar o novo nó
+          (cria-no (estado novo-no) novo-nivel (pai novo-no) custo-total))))
+)
+
+
 
 (defun sucessores (no operadores &optional (heuristica nil))
   (mapcar (lambda (op) (novo-sucessor no op heuristica)) operadores)

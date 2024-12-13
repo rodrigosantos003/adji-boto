@@ -2,10 +2,22 @@
 ;;; Funções para calcular as medidas de desempenho dos algoritmos
 ;;; Autores: João Fernandes e Rodrigo Santos
 
+;; Variável global para contar o número de nós gerados
+(defparameter *numero-nos-gerados* 0.0)
+
+;; Função para incrementar o contador de nós gerados
+(defun incrementar-nos ()
+  (incf *numero-nos-gerados*))
+
+(defun resetar-contar-nos ()
+  "Reseta o contador de nós gerados para 0."
+  (setf *numero-nos-gerados* 0.0))
+
+
 ;; Penetrância
-(defun penetrancia (caminho abertos fechados)
+(defun penetrancia (caminho)
   "Calcula a penetrância de um algortimo (P = L/T)"
-  (/ (comprimento-caminho caminho) (total-nos abertos fechados))
+  (/ (comprimento-caminho caminho) *numero-nos-gerados*)
 )
 
 (defun comprimento-caminho (c)
