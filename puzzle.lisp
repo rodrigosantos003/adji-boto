@@ -12,13 +12,39 @@
 
 (defun tabuleiro-teste ()
   "Retorna um tabuleiro de teste 2x6 que corresponde ao tabuleiro d) do enunciado do projeto"
-  '((0 0 0 0 0 0)
-    (0 0 0 0 1 2))
+  '((0 0 0 0 0 0)(0 0 0 0 1 2))
 )
 
 (defun tabuleiro-inicial()
- '((8 8 8 8 8 8)
- (8 8 8 8 8 8))
+ '((8 8 8 8 8 8)(8 8 8 8 8 8))
+)
+
+(defun problema-a ()
+   '((0 0 0 0 0 2)(0 0 0 0 4 0))
+)
+
+(defun problema-b ()
+   '((2 2 2 2 2 2)(2 2 2 2 2 2))
+)
+
+(defun problema-c ()
+   '((0 3 0 3 0 3)(3 0 3 0 3 0))
+)
+
+(defun problema-d ()
+   '((1 2 3 4 5 6)(6 5 4 3 2 1))
+)
+
+(defun problema-e ()
+   '((2 4 6 8 10 12)(12 10 8 6 4 2))
+)
+
+(defun problema-f ()
+   '((48 0 0 0 0 0)(0 0 0 0 0 48))
+)
+
+(defun problema-g ()
+   '((8 8 8 8 8 8)(8 8 8 8 8 8))
 )
 
 ;;; Seletores
