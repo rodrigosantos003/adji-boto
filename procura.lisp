@@ -135,10 +135,10 @@
   (let* ((no-pai (pai no))
          (no-estado (estado no)))
     (if (null no-pai)
-        (cons no solucao)
+        (cons no-estado solucao)
         (caminho no-pai
                 fechados
-                (cons no solucao)))))
+                (cons no-estado solucao)))))
 
 (defun estado (no) (first no))
 
