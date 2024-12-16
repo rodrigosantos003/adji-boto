@@ -8,7 +8,6 @@
 (load (merge-pathnames "procura.lisp" (current-pathname)))
 (load (merge-pathnames "desempenho.lisp" (current-pathname)))
 
-
 (defun inicializar-problemas ()
   (escrever-problema "A" (problema-a))
   (escrever-problema "B" (problema-b))
@@ -23,7 +22,7 @@
 
 (defun iniciar ()
   (format t "Escolha um problema para resolver (de A a G): ")
-  (let ((nome-problema (read-line)))
+  (let ((nome-problema (string-upcase (read-line))))
     (let ((resultado (obter-problema nome-problema)))
       (if resultado
           (progn
@@ -93,3 +92,8 @@
       (list 
        (read-from-string (concatenate 'string "(" linha1 ")"))
        (read-from-string (concatenate 'string "(" linha2 ")"))))))
+
+(defun apresentar-desempenho (c)
+  (format t "Penetrância: ~A ~%" (penetrancia c))
+  (format t "Fator Ramificação: ~A %" (fator-ramificacao (comprimento-caminho c) *numero-nos-gerados* -1 1 0.0001))
+)
