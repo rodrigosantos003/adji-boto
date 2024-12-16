@@ -7,45 +7,40 @@
   (cond
     ((null abertos) nil)  ; Se a lista de abertos estiver vazia, retorna nil
     (t
-     (let* ((no (first abertos))
-            (abertos-sem-no (rest abertos))
-            (sucessores-validos 
-             (remove-if-not 
-              (lambda (sucessor)
-                (and (not (lista-tem-no sucessor abertos))
-                     (not (lista-tem-no sucessor fechados))))
-              (sucessores no (gerar-operadores (estado no))))))
+     (let ((sucessores-validos
+            (remove-if-not
+             (lambda (sucessor)
+               (and (not (lista-tem-no sucessor abertos))
+                    (not (lista-tem-no sucessor fechados))))
+             (sucessores (first abertos) (gerar-operadores (estado (first abertos)))))))
        (cond
          ((not (null (filtrar-nos-objetivos sucessores-validos)))
-          (caminho (filtrar-nos-objetivos sucessores-validos) novo-fechados))  ; Se há objetivos, retorna o caminho
+          (apresentar-resultado (filtrar-nos-objetivos sucessores-validos) (cons (first abertos) fechados)))
          (t
-          (bfs nil (append abertos-sem-no sucessores-validos) (cons no fechados))))))))  ; Caso contrário, chama recursivamente
+          (bfs estadoInicial
+               (append (rest abertos) sucessores-validos)
+               (cons (first abertos) fechados))))))))
+
+
 
 (defun dfs (estadoInicial &optional (limite most-positive-fixnum) (abertos (list (cria-no estadoInicial 0))) (fechados '()))
-  (resetar-contar-nos)
   (if (null abertos)
       nil  ; Retorna nil se não encontrar solução
-      (let* ((no (first abertos))
-             (profundidade (nivel no))
-             (abertos-sem-no (rest abertos)))
-        (cond
-          ((>= profundidade limite) ; Se a profundidade exceder o limite, não continua
-           (dfs nil limite abertos-sem-no novo-fechados))  ; Continua com o restante da lista de abertos
-          (t ; Caso contrário, explora os sucessores
-           (let* ((sucessores-validos
-                   (remove-if-not 
-                    (lambda (sucessor)
-                      (and (not (lista-tem-no sucessor abertos))
-                           (not (lista-tem-no sucessor novo-fechados))))
-                    (sucessores no (gerar-operadores (estado no))))))
-             (if (not (null (filtrar-nos-objetivos sucessores-validos)))
-                 (caminho (filtrar-nos-objetivos sucessores-validos) novo-fechados)  ; Se houver objetivo, retorna o caminho
-                 (dfs nil limite (append sucessores-validos abertos-sem-no) (cons no fechados)))))))))
-
-
+      (if (>= (nivel (first abertos)) limite)  ; Se a profundidade exceder o limite, não continua
+          (dfs nil limite (rest abertos) (cons (first abertos) fechados))
+          (let ((sucessores-validos
+                 (remove-if-not 
+                  (lambda (sucessor)
+                    (and (not (lista-tem-no sucessor abertos))
+                         (not (lista-tem-no sucessor fechados))))
+                  (sucessores (first abertos) (gerar-operadores (estado (first abertos)))))))
+            (if (not (null (filtrar-nos-objetivos sucessores-validos)))
+                (apresentar-resultado (filtrar-nos-objetivos sucessores-validos) (cons (first abertos) fechados))  ; Se houver objetivo, retorna o caminho
+                (dfs estadoInicial limite 
+                     (append sucessores-validos (rest abertos))
+                     (cons (first abertos) fechados)))))))
 
 (defun a-star (estadoInicial fHeuristica &optional (abertos (list (cria-no estadoInicial))) (fechados '()))
-  (resetar-contar-nos)
   (if (null abertos)
       nil
       (let* ((no (first abertos))
@@ -64,6 +59,7 @@
                      sucessores-gerados))
                    (novos-abertos (inserir-nodes sucessores-validos abertos-filtrados)))
               (a-star nil fHeuristica novos-abertos fechados-filtrados))))))
+
 
 ;; Funções auxiliares da procura
 (defun lista-tem-no (node lista)
@@ -113,15 +109,28 @@
        (and melhor-elemento (< (custo melhor-elemento) custo-original))))
    lista))
 
-
 (defun caminho (no fechados &optional (solucao '()))
-  (let* ((no-pai (pai no))
-         (no-estado (estado no)))
-    (if (null no-pai)
-        (cons no-estado solucao)
-        (caminho no-pai
+(if (null (pai no))
+        (cons no solucao)
+        (caminho (pai no)
                 fechados
-                (cons no-estado solucao)))))
+                (cons no solucao))))
+
+(defun apresentar-caminho (solucao)
+  (if (null solucao)
+      nil  ; Caso base: se a lista estiver vazia, termina a recursão
+      (progn
+        (format t "~A - ~A~%" (estado (first solucao)) (custo (first solucao)))  ; Imprime o estado e o custo
+        (apresentar-caminho (rest solucao)))))  ; Chamada recursiva para o próximo nó
+
+(defun apresentar-resultado (no fechados)
+  (let ((solucao (caminho no fechados)))  ; Obtém o caminho
+    (format t "RESULTADO~%")
+    (format t "Estado inicial:  \"~A\"~%" (estado (first solucao)))  ; Imprime o estado inicial
+    (format t "Caminho:~%")
+    (apresentar-caminho solucao)))  ; Chama a função recursiva para imprimir o caminho
+
+
 
 (defun estado (no) (first no))
 
@@ -133,7 +142,7 @@
 
 ;; Geração de sucessores
 (defun cria-no (estadoNo &optional (nivelNo 0) (paiNo nil) (custoNo 0))
-  (list estadoNo nivelNo paiNo custoNo))
+  (list estadoNo nivelNo paiNo (+ nivelNo custoNo)))
 
 (defun novo-sucessor (no operador &optional (heuristica nil))
   (let* ((novo-estado (funcall operador (estado no)))
@@ -141,13 +150,12 @@
          (novo-no (cria-no novo-estado novo-nivel no)))
     ;; Incrementa o contador de nós gerados
     (incrementar-nos)
-    (if (null heuristica)
-        novo-no
-        (let ((custo-total (+ novo-nivel (funcall heuristica novo-no))))
-          ;; Retorna uma nova versão do nó com o custo atualizado
-          (incrementar-nos)  ;; Incrementa novamente ao criar o novo nó
-          (cria-no (estado novo-no) novo-nivel (pai novo-no) custo-total))))
-)
+    (cond
+      ((null heuristica) novo-no)  ;; Se heurística for nula, retorna o novo nó sem a heurística
+      (t (incrementar-nos)  ;; Incrementa novamente ao criar o novo nó com heurística
+          (cria-no (estado novo-no) novo-nivel (pai novo-no) (funcall heuristica novo-no))))))
+
+
 
 
 (defun sucessores (no operadores &optional (heuristica nil))
