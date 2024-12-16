@@ -4,46 +4,44 @@
 
 ;; Travessias
 (defun bfs (estadoInicial &optional (abertos (list (cria-no estadoInicial))) (fechados '()))
-  (resetar-contar-nos)
-  (if (null abertos)
-      nil
-      (let* ((no (first abertos))
-             (abertos-sem-no (rest abertos))
-             (novo-fechados (cons no fechados))
-             (sucessores-validos 
-              (remove-if-not 
-               (lambda (sucessor)
-                 (and (not (lista-tem-no sucessor abertos))
-                      (not (lista-tem-no sucessor fechados))))
-               (sucessores no (gerar-operadores (estado no)))))
-             (novo-abertos (append abertos-sem-no sucessores-validos))
-             (no-objetivo (filtrar-nos-objetivos sucessores-validos)))
-        (if (not (null no-objetivo))
-            (caminho no-objetivo novo-fechados)
-            (bfs nil novo-abertos novo-fechados)))))
-
+  (cond
+    ((null abertos) nil)  ; Se a lista de abertos estiver vazia, retorna nil
+    (t
+     (let* ((no (first abertos))
+            (abertos-sem-no (rest abertos))
+            (sucessores-validos 
+             (remove-if-not 
+              (lambda (sucessor)
+                (and (not (lista-tem-no sucessor abertos))
+                     (not (lista-tem-no sucessor fechados))))
+              (sucessores no (gerar-operadores (estado no))))))
+       (cond
+         ((not (null (filtrar-nos-objetivos sucessores-validos)))
+          (caminho (filtrar-nos-objetivos sucessores-validos) novo-fechados))  ; Se há objetivos, retorna o caminho
+         (t
+          (bfs nil (append abertos-sem-no sucessores-validos) (cons no fechados))))))))  ; Caso contrário, chama recursivamente
 
 (defun dfs (estadoInicial &optional (limite most-positive-fixnum) (abertos (list (cria-no estadoInicial 0))) (fechados '()))
   (resetar-contar-nos)
   (if (null abertos)
-      nil ; Retorna nil se não encontrar solução
+      nil  ; Retorna nil se não encontrar solução
       (let* ((no (first abertos))
              (profundidade (nivel no))
-             (abertos-sem-no (rest abertos))
-             (novo-fechados (cons no fechados)))
-        (if (>= profundidade limite)
-            (dfs nil limite abertos-sem-no novo-fechados)
-            (let* ((sucessores-validos 
-                    (remove-if-not 
-                     (lambda (sucessor)
-                       (and (not (lista-tem-no sucessor abertos))
-                            (not (lista-tem-no sucessor novo-fechados))))
-                     (sucessores no (gerar-operadores (estado no)))))
-                   (novos-abertos (append sucessores-validos abertos-sem-no))
-                   (no-objetivo (filtrar-nos-objetivos sucessores-validos)))
-              (if (not (null no-objetivo))
-                  (caminho no-objetivo novo-fechados)
-                  (dfs nil limite novos-abertos novo-fechados)))))))
+             (abertos-sem-no (rest abertos)))
+        (cond
+          ((>= profundidade limite) ; Se a profundidade exceder o limite, não continua
+           (dfs nil limite abertos-sem-no novo-fechados))  ; Continua com o restante da lista de abertos
+          (t ; Caso contrário, explora os sucessores
+           (let* ((sucessores-validos
+                   (remove-if-not 
+                    (lambda (sucessor)
+                      (and (not (lista-tem-no sucessor abertos))
+                           (not (lista-tem-no sucessor novo-fechados))))
+                    (sucessores no (gerar-operadores (estado no))))))
+             (if (not (null (filtrar-nos-objetivos sucessores-validos)))
+                 (caminho (filtrar-nos-objetivos sucessores-validos) novo-fechados)  ; Se houver objetivo, retorna o caminho
+                 (dfs nil limite (append sucessores-validos abertos-sem-no) (cons no fechados)))))))))
+
 
 
 (defun a-star (estadoInicial fHeuristica &optional (abertos (list (cria-no estadoInicial))) (fechados '()))
