@@ -128,7 +128,8 @@
     (format t "RESULTADO~%")
     (format t "Estado inicial:  \"~A\"~%" (estado (first solucao)))  ; Imprime o estado inicial
     (format t "Caminho:~%")
-    (apresentar-caminho solucao)))  ; Chama a função recursiva para imprimir o caminho
+    (apresentar-caminho solucao)
+    (apresentar-desempenho solucao)))  ; Chama a função recursiva para imprimir o caminho
 
 
 

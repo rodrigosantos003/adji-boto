@@ -13,6 +13,12 @@
   "Reseta o contador de nós gerados para 0."
   (setf *numero-nos-gerados* 0.0))
 
+(defun apresentar-desempenho (c)
+  (format t "Número nós: ~A ~%" *numero-nos-gerados*)
+  (format t "Comprimento caminho: ~A ~%" (comprimento-caminho c))
+  (format t "Penetrância: ~A ~%" (penetrancia c))
+  (format t "Fator Ramificação: ~A ~%" (fator-ramificacao (comprimento-caminho c) *numero-nos-gerados* 1 (comprimento-caminho c) 0.0001))
+)
 
 ;; Penetrância
 (defun penetrancia (caminho)
@@ -21,7 +27,7 @@
 )
 
 (defun comprimento-caminho (c)
-  (length c)
+  (- (length c) 1)
 )
 
 (defun total-nos (abertos fechados)

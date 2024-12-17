@@ -21,6 +21,7 @@
 ;; Leitura utilizador
 
 (defun iniciar ()
+  (resetar-contar-nos)
   (format t "Escolha um problema para resolver (de A a G): ")
   (let ((nome-problema (string-upcase (read-line))))
     (let ((resultado (obter-problema nome-problema)))
@@ -30,7 +31,6 @@
             (ler-algoritmo resultado))
           (format t "Problema ~A não encontrado.~%" nome-problema))))
 )
-
 
 (defun ler-algoritmo (problema)
   "Pede ao usuário para escolher um algoritmo e executa o algoritmo selecionado."
@@ -42,13 +42,15 @@
        (format t "Executando BFS...~%")
        (bfs problema))
       ((string= input "DFS") 
-       (format t "Digite a profundidade: ")
-       (setf profundidade (read))
-       (dfs problema profundidade))
+       (format t "Digite a profundidade (-1 se não quiser dar profundidade): ")
+       (let ((profundidade (read)))
+         (if (= profundidade -1)
+             (dfs problema)
+             (dfs problema profundidade))))
       ((string= input "A-STAR") 
        (format t "Digite o nome da heurística: ")
-       (setf heuristica (read))
-       (a-star problema #'heuristica))
+       (let ((heuristica (read)))
+         (a-star problema heuristica)))
       (t 
        (format t "Opção inválida.~%")))))
 
@@ -92,8 +94,3 @@
       (list 
        (read-from-string (concatenate 'string "(" linha1 ")"))
        (read-from-string (concatenate 'string "(" linha2 ")"))))))
-
-(defun apresentar-desempenho (c)
-  (format t "Penetrância: ~A ~%" (penetrancia c))
-  (format t "Fator Ramificação: ~A %" (fator-ramificacao (comprimento-caminho c) *numero-nos-gerados* -1 1 0.0001))
-)
