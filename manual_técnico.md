@@ -15,8 +15,8 @@
 2. [Módulos](#módulos)
 3. [Entidades](#entidades)
 4. [Algoritmos](#algoritmos)
-5. [Limitações e ideias para desenvolvimento futuro](#limitações-técnicas-e-ideias-para-desenvolvimento-futuro)
-6. [Comparação dos Algortimos](#comparação-dos-algoritmos)
+5. [Comparação dos Algortimos](#comparação-dos-algoritmos)
+6. [Limitações e ideias para desenvolvimento futuro](#limitações-técnicas-e-ideias-para-desenvolvimento-futuro)
 7. [Conclusão](#conclusão)
 
 ## Introdução
@@ -25,7 +25,7 @@ No âmbito do primeiro projeto da Unidade Curricular (UC) de Inteligência Artif
 foi solicitado aos alunos que implementassem um programa para resolução do problema Adji-boto, recorrendo a algoritmos de procura de espaços de estados e usando a
 linguagem de programação LISP.
 
-O presente relatório tem como objetivo descrever a solução desenvolvida pelos alunos, bem como os detalhes da sua implementação.
+O presente manual técnico tem como objetivo descrever a solução desenvolvida pelos alunos, bem como os detalhes da sua implementação.
 
 ## Módulos
 
@@ -112,25 +112,72 @@ A abordagem recursiva permite desenvolver soluções mais concisas para problema
 
 Ao usar o paradigma funcional, é favorecida a imutabilidade dos dados.
 
+## Comparação dos Algoritmos
+
+Após a implementação dos algoritmos, os alunos procederam à análise das medidas de desempenho, nomeadamente o número de nós gerados, o comprimento do caminho,
+a penetrânica, o fator de ramificação média e o tempo de execução.
+
+Em traços gerais, o algoritmo A* possui um melhor desempenho em todos os critérios analisados.
+
+O algoritmo BFS possui o pior desempenho e não encontra a maioria das soluções para os problemas,
+não só pelo seu funcionamento geral como também pelas limitações técnicas que serão explanadas mais adiante no presente manual.
+
+Já o algoritmo DFS tem também um bom desempenho, com a salvaguarda que se deve fornecer o limite de profundidade muito próximo ao do nó objetivo ou,
+não fornecer limite de profundidade de forma a deixar o algoritmo explorar os estados tanto quanto possível.
+
+### Execução BFS
+
+Problema | Nº Nós Gerados | Comprimento Caminho | Penetrância | Fator Ramificação Média| Tempo Execução
+---------|----------------|---------------------|-------------|------------------------|-----------------
+A        | 25             | 4                   | 0,16        | 2,5                    | 0,005s
+B        | Não encontrado | -                   | -           |  -                     | -
+C        | Não encontrado | -                   | -           |  -                     | -
+D        | Não encontrado | -                   | -           |  -                     | -
+E        | Não encontrado | -                   | -           |  -                     | -
+F        | Não encontrado | -                   | -           |  -                     | -
+G        | Não encontrado | -                   | -           |  -                     | -
+
+### Execução DFS
+
+Problema | Nº Nós Gerados | Comprimento Caminho | Penetrância   | Fator Ramificação Média   | Tempo Execução
+---------|----------------|---------------------|---------------|---------------------------|-----------------
+A        | 11             | 6                   | 0,54          | 0,55                      | 0,002s
+B        | 99             | 18                  | 0,18          | 9,5                       | 0,005s
+C        | 39             | 10                  | 0,26          | 5,5                       | 0,006s
+D        | 362            | 53                  | 0,15          | 27                        | 0,058s
+E        | 809            | 108                 | 0,13          | 54,5                      | 0,321s
+F        | 809            | 108                 | 0,13          | 54,5                      | 0,498s
+G        | 741            | 101                 | 0.14          | 51                        | 0.368s
+
+### Execução A*
+
+Problema   | Nº Nós Gerados   | Comprimento Caminho   | Penetrância   | Fator Ramificação Média   | Tempo Execução
+-----------|------------------|-----------------------|---------------|---------------------------|----------------
+A          | 22               | 6                     | 0,27          | 0,55                      | 0,003s
+B          | 156              | 14                    | 0,09          | 9,5                       | 0,019s
+C          | 78               | 10                    | 0,13          | 5,5                       | 0,000s
+D          | 554              | 39                    | 0.07          | 20                        | 0,043s
+E          | 534              | 35                    | 0.07          | 18                        | 0,046s
+F          | 540              | 39                    | 0.07          | 20                        | 0,077s
+G          | 792              | 52                    | 0.07          | 26.5                      | 0,114s
+
 ## Limitações técnicas e ideias para desenvolvimento futuro
 
-Existem algumas limitações técnias no funcionamento do presente projeto, nomeadamente as limitações de memória do IDE LispWorks.
+Existem algumas limitações técnias no funcionamento do presente projeto, relacionadas com as limitações de memória do IDE LispWorks.
 
-Desta forma, não é possível encontrar solução para os problemas D, F e G descritos no enunciado. Isto deve-se ao facto destes tabuleiros possuirem uma grande
-quantidade de peças, logo, ao gerar sucessores, existe uma explosão combinatória.
+Desta forma, não é possível encontrar solução para os problemas B, C, D, E, F e G descritos no enunciado usando o algoritmo BFS.
+Isto deve-se ao facto de os problemas, na sua representação em grafo, possuirem o nó objetivo numa profundidade elevada, fazendo com que o método de procura em largura
+não tenha memória disponível no IDE suficiente para chegar à solução.
 
 Algumas ideias para desenvolvimento futuro são:
 
 - Implementação de algoritmos de procura em espaço de estados que usem procura com memória limitado, como o IDA*, RBFS e SMA*;
 - Permitir ao utilizador adicionar problemas;
-- Gerar problemas aleatórios;
-- Permitir a comparação entre algoritmos.
-
-## Comparação dos Algoritmos
+- Gerar problemas aleatórios.
 
 ## Conclusão
 
-Ao longo deste projeto, foi possível aplicar na prática os conhecimentos teóricos adquiridos na UC de IA, nomeadamente no que diz respeito aos algoritmos de
+Ao longo deste projeto, foi possível aplicar na prática os conhecimentos teóricos adquiridos na UC de IA, no que diz respeito aos algoritmos de
 procura em espaços de estados.
 
 A implementação da solução para o problema Adji-boto em LISP proporcionou uma valiosa experiência de programação e um aprofundamento da compreensão dos conceitos
