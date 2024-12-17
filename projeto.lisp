@@ -40,17 +40,17 @@
     (cond
       ((string= input "BFS") 
        (format t "Executando BFS...~%")
-       (bfs problema))
+       (executar-bfs problema))
       ((string= input "DFS") 
        (format t "Digite a profundidade (-1 se não quiser dar profundidade): ")
        (let ((profundidade (read)))
          (if (= profundidade -1)
-             (dfs problema)
-             (dfs problema profundidade))))
+             (executar-dfs problema)
+             (executar-dfs problema profundidade))))
       ((string= input "A-STAR") 
-       (format t "Digite o nome da heurística: ")
+       (format t "Digite o nome da heurística (heuristicaBase ou heuristicaPersonalizada): ")
        (let ((heuristica (read)))
-         (a-star problema heuristica)))
+         (executar-a-star problema heuristica)))
       (t 
        (format t "Opção inválida.~%")))))
 

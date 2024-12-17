@@ -1,5 +1,5 @@
 ;;;; procura.lisp
-;;;; Alogritmos de porcura
+;;;; Alogritmos de procura
 ;;;; Autores: Rodrigo Santos e João Fernandes
 
 ;; Travessias
@@ -21,8 +21,6 @@
                (append (rest abertos) sucessores-validos)
                (cons (first abertos) fechados))))))))
 
-
-
 (defun dfs (estadoInicial &optional (limite most-positive-fixnum) (abertos (list (cria-no estadoInicial 0))) (fechados '()))
   (if (null abertos)
       nil  ; Retorna nil se não encontrar solução
@@ -41,27 +39,56 @@
                      (cons (first abertos) fechados)))))))
 
 (defun a-star (estadoInicial fHeuristica &optional (abertos (list (cria-no estadoInicial))) (fechados '()))
+  "Executa o algoritmo A* usando recursão em cauda otimizada."
   (if (null abertos)
-      nil
-      (let* ((no (first abertos))
-             (novo-abertos (rest abertos))
-             (novo-fechados (cons no fechados)))
-        (if (tabuleiro-vaziop (estado no))
-            (caminho no novo-fechados)
-            (let* ((sucessores-gerados (sucessores no (gerar-operadores (estado no)) fHeuristica))
-                   (abertos-filtrados (remover-nodes-com-maior-custo novo-abertos sucessores-gerados))
-                   (fechados-filtrados (remover-nodes-com-maior-custo novo-fechados sucessores-gerados))
-                   (sucessores-validos 
-                    (remove-if 
-                     (lambda (sucessor)
-                       (or (lista-tem-no sucessor abertos)
-                           (lista-tem-no sucessor fechados)))
-                     sucessores-gerados))
-                   (novos-abertos (inserir-nodes sucessores-validos abertos-filtrados)))
-              (a-star nil fHeuristica novos-abertos fechados-filtrados))))))
+      nil ; Caso a lista de abertos esteja vazia, falha.
+      (let ((no-atual (first abertos)))
+        (if (tabuleiro-vaziop (estado no-atual))
+            (apresentar-resultado no-atual (cons no-atual fechados)) ; Se o tabuleiro estiver vazio, retorna o caminho.
+            (let* ((sucessores-validos
+                    (filtra-sucessores
+                     (sucessores no-atual (gerar-operadores (estado no-atual)) fHeuristica)
+                     (rest abertos)
+                     fechados)))
+              (a-star 
+               ;; Estado
+               nil 
+               ;; Heuristica
+               fHeuristica 
+               ;; Abertos
+               (inserir-nodes sucessores-validos (rest abertos)) 
+               ;; Fechados
+               (atualiza-fechados no-atual fechados sucessores-validos)))))))
 
+(defun filtra-sucessores (sucessores abertos fechados)
+  "Filtra os sucessores válidos."
+  (remove-if-not
+   (lambda (sucessor)
+     (or (nao-existep sucessor abertos fechados)
+         (melhor-custop sucessor abertos)
+         (melhor-custop sucessor fechados)))
+   sucessores))
 
 ;; Funções auxiliares da procura
+
+(defun nao-existep (no lista1 lista2)
+  "Verifica se o nó não existe em nenhuma das duas listas."
+  (and (not (find no lista1 :key #'estado :test #'equal))
+       (not (find no lista2 :key #'estado :test #'equal))))
+
+(defun melhor-custop (no lista)
+  "Verifica se o nó tem um custo menor que o nó correspondente na lista."
+  (let ((no-existente (find no lista :key #'estado :test #'equal)))
+    (and no-existente (< (custo no) (custo no-existente)))))
+
+(defun atualiza-fechados (no-atual fechados sucessores-validos)
+  "Atualiza a lista de fechados, removendo duplicatas."
+  (cons no-atual
+        (remove-if
+         (lambda (no)
+           (find no sucessores-validos :key #'estado :test #'equal))
+         fechados)))
+
 (defun lista-tem-no (node lista)
   (member (estado node) (mapcar #'estado lista) :test #'equal)
 )
@@ -86,29 +113,6 @@
    novos-nos
    :initial-value lista))
 
-
-(defun substituir-nodes-com-menor-custo (lista novos-elementos)
-  (reduce 
-   (lambda (acc elemento)
-     (let* ((estado-original (estado elemento))
-            (custo-original (custo elemento))
-            (melhor-elemento (find estado-original novos-elementos :key #'estado :test #'equal)))
-       (if (and melhor-elemento (< (custo melhor-elemento) custo-original))
-           (cons melhor-elemento acc)
-           (cons elemento acc))))
-   lista
-   :initial-value '()
-   :from-end t))
-
-(defun remover-nodes-com-maior-custo (lista novos-elementos)
-  (remove-if 
-   (lambda (elemento)
-     (let* ((estado-original (estado elemento))
-            (custo-original (custo elemento))
-            (melhor-elemento (find estado-original novos-elementos :key #'estado :test #'equal)))
-       (and melhor-elemento (< (custo melhor-elemento) custo-original))))
-   lista))
-
 (defun caminho (no fechados &optional (solucao '()))
 (if (null (pai no))
         (cons no solucao)
@@ -130,7 +134,6 @@
     (format t "Caminho:~%")
     (apresentar-caminho solucao)
     (apresentar-desempenho solucao)))  ; Chama a função recursiva para imprimir o caminho
-
 
 
 (defun estado (no) (first no))
@@ -156,23 +159,9 @@
       (t (incrementar-nos)  ;; Incrementa novamente ao criar o novo nó com heurística
           (cria-no (estado novo-no) novo-nivel (pai novo-no) (funcall heuristica novo-no))))))
 
-
-
-
 (defun sucessores (no operadores &optional (heuristica nil))
   (mapcar (lambda (op) (novo-sucessor no op heuristica)) operadores)
 )
-
-(defun substituir-no (lista novoNo)
-  "Substitui um nó na lista se o estado for igual e a heurística do novo nó for menor."
-  (let* ((novo-estado (estado novoNo))       ;; O estado do novoNo
-         (nova-heuristica (custo novoNo))) ;; A heurística do novoNo
-    (mapcar (lambda (no)
-              (if (and (equal (estado no) novo-estado)  ;; Estados iguais
-                       (> (custo no) nova-heuristica)) ;; Heurística maior
-                  novoNo  ;; Substitui o nó pelo novoNode
-                  no))      ;; Caso contrário, mantém o nó original
-            lista)))
 
 (defun raiz (no)
   (if (null (pai no))   ; Se o nó atual não tem pai, é a raiz

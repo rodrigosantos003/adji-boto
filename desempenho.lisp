@@ -58,3 +58,19 @@
             ((< (* fa fc) 0) (metodo-bisseccao fun c b tolerancia))
             (t (metodo-bisseccao fun a c tolerancia)))))
 )
+
+;; Tempo execução
+(defun medir-tempo (fun)
+  (let ((tempo-inicial (get-internal-real-time)))
+    (funcall fun)
+    (let ((tempo-final (get-internal-real-time)))
+      (format t "Tempo Execução: ~A s ~%" (float (/ (- tempo-final tempo-inicial) internal-time-units-per-second))))))
+
+(defun executar-bfs (estadoInicial)
+  (medir-tempo (lambda () (bfs estadoInicial))))
+
+(defun executar-dfs (estadoInicial &optional (limite most-positive-fixnum))
+  (medir-tempo (lambda () (dfs estadoInicial limite))))
+
+(defun executar-a-star (estadoInicial fHeuristica)
+  (medir-tempo (lambda () (a-star estadoInicial fHeuristica))))
