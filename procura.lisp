@@ -121,11 +121,10 @@
                 (cons no solucao))))
 
 (defun apresentar-caminho (solucao)
-  (if (null solucao)
-      nil  ; Caso base: se a lista estiver vazia, termina a recursão
-      (progn
-        (format t "~A - ~A~%" (estado (first solucao)) (custo (first solucao)))  ; Imprime o estado e o custo
-        (apresentar-caminho (rest solucao)))))  ; Chamada recursiva para o próximo nó
+  (when solucao
+    (format t "~A - ~A~%" (estado (car solucao)) (custo (car solucao)))
+    (apresentar-caminho (cdr solucao))))
+
 
 (defun apresentar-resultado (no fechados)
   (let ((solucao (caminho no fechados)))  ; Obtém o caminho

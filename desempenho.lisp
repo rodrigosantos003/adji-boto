@@ -16,8 +16,8 @@
 (defun apresentar-desempenho (c)
   (format t "Número nós: ~A ~%" *numero-nos-gerados*)
   (format t "Comprimento caminho: ~A ~%" (comprimento-caminho c))
-  (format t "Penetrância: ~A ~%" (penetrancia c))
-  (format t "Fator Ramificação: ~A ~%" (fator-ramificacao (comprimento-caminho c) *numero-nos-gerados* 1 (comprimento-caminho c) 0.0001))
+  (format t "Penetrância: ~,vF ~%" 2 (penetrancia c))
+  (format t "Fator Ramificação: ~,vF ~%" 4 (float (fator-ramificacao (comprimento-caminho c) *numero-nos-gerados* 1 (comprimento-caminho c) 0.0001)))
 )
 
 ;; Penetrância
@@ -51,11 +51,10 @@
 (defun metodo-bisseccao (fun a b tolerancia)
   (if (< (- b a) tolerancia)(/ (+ a b) 2)
       (let* ((c (/ (+ a b) 2))
-             (fa (funcall fun a))
-             (fc (funcall fun c)))
+)
         (cond
-            ((= fc 0) c)
-            ((< (* fa fc) 0) (metodo-bisseccao fun c b tolerancia))
+            ((= (funcall fun c) 0) c)
+            ((< (* (funcall fun a) (funcall fun c)) 0) (metodo-bisseccao fun c b tolerancia))
             (t (metodo-bisseccao fun a c tolerancia)))))
 )
 
@@ -63,8 +62,7 @@
 (defun medir-tempo (fun)
   (let ((tempo-inicial (get-internal-real-time)))
     (funcall fun)
-    (let ((tempo-final (get-internal-real-time)))
-      (format t "Tempo Execução: ~A s ~%" (float (/ (- tempo-final tempo-inicial) internal-time-units-per-second))))))
+      (format t "Tempo Execução: ~,vF s ~%" 3 (float (/ (- (get-internal-real-time) tempo-inicial) internal-time-units-per-second)))))
 
 (defun executar-bfs (estadoInicial)
   (medir-tempo (lambda () (bfs estadoInicial))))
