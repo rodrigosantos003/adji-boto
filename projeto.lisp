@@ -47,7 +47,7 @@
          (if (= profundidade -1)
              (executar-dfs problema)
              (executar-dfs problema profundidade))))
-      ((string= input "A-STAR") 
+      ((string= input "A-STAR")
        (format t "Digite o nome da heurística (heuristicaBase ou heuristicaPersonalizada): ")
        (let ((heuristica (read)))
          (executar-a-star problema heuristica)))
@@ -57,7 +57,7 @@
 ;; Escrita e leitura em ficheiros
 
 (defun caminho-problemas ()
-  "C:\\Users\\rodri\\Documents\\PROJETOS\\ia-projeto_1\\problemas.dat"
+  "C:\\Users\\ender\\Documents\\GitHub\\ia-projeto_1"
 )
 
 (defun escrever-problema (nome-problema tabuleiro-problema)

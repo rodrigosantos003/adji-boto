@@ -169,3 +169,44 @@
          (pecas-raiz (soma-pecas (estado noRaiz)))
          (pecas-capturadas (- pecas-raiz pecas-no)))
       (- pecas-no pecas-capturadas)))
+
+(defun heuristicaCustom (no)
+  (let* ((pecas-no (soma-pecas (estado no)))
+         (media-pecas-eliminadas (verificar-pecas-eliminadas (estado no))))
+      (- pecas-no media-pecas-eliminadas)))
+
+
+
+(defun pecas-eliminadas (linha coluna tabuleiro)
+  (let* ((ultima-posicao (first (last (distribuir-pecas (celula linha coluna tabuleiro) linha coluna tabuleiro))))
+         (ultima-posicao-pecas (celula (first ultima-posicao) (second ultima-posicao) tabuleiro))
+         (num-pecas (+ (ceiling (celula linha coluna tabuleiro) 12) ultima-posicao-pecas)))
+    (cond
+      ((= num-pecas 1) 1)
+      ((= num-pecas 3) 3)
+      ((= num-pecas 5) 5)
+      (t 0))))
+
+
+(defun verificar-pecas-eliminadas (tabuleiro &optional (linha 0) (coluna 0) (resultados '()))
+  (if (>= linha (length tabuleiro)) ; Verifica se todas as linhas foram percorridas.
+      (let* ((resultados-sem-zero (remove-if-not #'(lambda (x) (> x 0)) resultados)) ; Filtra os 0.
+             (total (apply '+ resultados-sem-zero)) ; Soma dos resultados não nulos.
+             (quantidade (length resultados-sem-zero))) ; Quantidade de elementos não nulos.
+        (if (> quantidade 0) ; Verifica se há elementos para calcular a média.
+            (floor (/ total quantidade)) ; Calcula a média.
+            0)) ; Se não houver elementos não nulos, retorna 0.
+    (let ((nova-linha (if (>= coluna (length (nth linha tabuleiro)))
+                          (1+ linha)
+                        linha))
+          (nova-coluna (if (>= coluna (length (nth linha tabuleiro)))
+                           0
+                         (1+ coluna))))
+      (if (and (< linha (length tabuleiro)) ; Verifica se ainda está dentro da matriz.
+               (< coluna (length (nth linha tabuleiro)))
+               (celula-distribuivelp linha coluna tabuleiro)) ; Condição customizável.
+          (verificar-pecas-eliminadas tabuleiro nova-linha nova-coluna
+           (cons (pecas-eliminadas linha coluna tabuleiro) resultados)) ; Adiciona o lambda à lista.
+        (verificar-pecas-eliminadas tabuleiro nova-linha nova-coluna resultados)))))
+
+

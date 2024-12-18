@@ -15,7 +15,7 @@
              (sucessores (first abertos) (gerar-operadores (estado (first abertos)))))))
        (cond
          ((not (null (filtrar-nos-objetivos sucessores-validos)))
-          (apresentar-resultado (filtrar-nos-objetivos sucessores-validos) (cons (first abertos) fechados)))
+          (apresentar-resultado (filtrar-nos-objetivos sucessores-validos)))
          (t
           (bfs estadoInicial
                (append (rest abertos) sucessores-validos)
@@ -33,7 +33,7 @@
                          (not (lista-tem-no sucessor fechados))))
                   (sucessores (first abertos) (gerar-operadores (estado (first abertos)))))))
             (if (not (null (filtrar-nos-objetivos sucessores-validos)))
-                (apresentar-resultado (filtrar-nos-objetivos sucessores-validos) (cons (first abertos) fechados))  ; Se houver objetivo, retorna o caminho
+                (apresentar-resultado (filtrar-nos-objetivos sucessores-validos))  ; Se houver objetivo, retorna o caminho
                 (dfs estadoInicial limite 
                      (append sucessores-validos (rest abertos))
                      (cons (first abertos) fechados)))))))
@@ -44,7 +44,7 @@
       nil ; Caso a lista de abertos esteja vazia, falha.
       (let ((no-atual (first abertos)))
         (if (tabuleiro-vaziop (estado no-atual))
-            (apresentar-resultado no-atual (cons no-atual fechados)) ; Se o tabuleiro estiver vazio, retorna o caminho.
+            (apresentar-resultado no-atual) ; Se o tabuleiro estiver vazio, retorna o caminho.
             (let* ((sucessores-validos
                     (filtra-sucessores
                      (sucessores no-atual (gerar-operadores (estado no-atual)) fHeuristica)
@@ -113,11 +113,10 @@
    novos-nos
    :initial-value lista))
 
-(defun caminho (no fechados &optional (solucao '()))
+(defun caminho (no &optional (solucao '()))
 (if (null (pai no))
         (cons no solucao)
         (caminho (pai no)
-                fechados
                 (cons no solucao))))
 
 (defun apresentar-caminho (solucao)
@@ -126,14 +125,13 @@
     (apresentar-caminho (cdr solucao))))
 
 
-(defun apresentar-resultado (no fechados)
-  (let ((solucao (caminho no fechados)))  ; Obtém o caminho
+(defun apresentar-resultado (no)
+  (let ((solucao (caminho no)))  ; Obtém o caminho
     (format t "RESULTADO~%")
     (format t "Estado inicial:  \"~A\"~%" (estado (first solucao)))  ; Imprime o estado inicial
     (format t "Caminho:~%")
     (apresentar-caminho solucao)
     (apresentar-desempenho solucao)))  ; Chama a função recursiva para imprimir o caminho
-
 
 (defun estado (no) (first no))
 
