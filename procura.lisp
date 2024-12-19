@@ -106,10 +106,9 @@
 (defun inserir-nodes (novos-nos lista)
   (reduce 
    (lambda (acc no)
-     (let ((custoAtual (custo no)))
-       (if (or (null acc) (< custoAtual (custo (first acc))))
+       (if (or (null acc) (< (custo no) (custo (first acc))))
            (cons no acc)
-           (cons (first acc) (inserir-nodes (list no) (rest acc))))))
+           (cons (first acc) (inserir-nodes (list no) (rest acc)))))
    novos-nos
    :initial-value lista))
 

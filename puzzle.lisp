@@ -170,12 +170,10 @@
          (pecas-capturadas (- pecas-raiz pecas-no)))
       (- pecas-no pecas-capturadas)))
 
-(defun heuristicaCustom (no)
+(defun heuristicaPersonalizada (no)
   (let* ((pecas-no (soma-pecas (estado no)))
          (media-pecas-eliminadas (verificar-pecas-eliminadas (estado no))))
       (- pecas-no media-pecas-eliminadas)))
-
-
 
 (defun pecas-eliminadas (linha coluna tabuleiro)
   (let* ((ultima-posicao (first (last (distribuir-pecas (celula linha coluna tabuleiro) linha coluna tabuleiro))))

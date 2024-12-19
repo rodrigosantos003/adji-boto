@@ -47,17 +47,20 @@
          (if (= profundidade -1)
              (executar-dfs problema)
              (executar-dfs problema profundidade))))
-      ((string= input "A-STAR")
-       (format t "Digite o nome da heurística (heuristicaBase ou heuristicaPersonalizada): ")
+      ((string= input "A-STAR") 
+       (format t "Indique a heurística (1- base; 2- personalizada): ")
        (let ((heuristica (read)))
-         (executar-a-star problema heuristica)))
+         (cond ((= heuristica 1) (executar-a-star problema #'heuristicaBase))
+               ((= heuristica 2) (executar-a-star problema #'heuristicaPersonalizada))
+               (t (format t "Opção inválida. ~%")))))
       (t 
        (format t "Opção inválida.~%")))))
+
 
 ;; Escrita e leitura em ficheiros
 
 (defun caminho-problemas ()
-  "C:\\Users\\ender\\Documents\\GitHub\\ia-projeto_1"
+  "./problemas.dat"
 )
 
 (defun escrever-problema (nome-problema tabuleiro-problema)

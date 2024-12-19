@@ -150,7 +150,9 @@ E        | 809            | 108                 | 0,13          | 54,5          
 F        | 809            | 108                 | 0,13          | 54,5                      | 0,498s
 G        | 741            | 101                 | 0.14          | 51                        | 0.368s
 
-### 6.3. Execução A*
+### 6.3. Execução A* - Heurística Base
+
+A heurística base consiste na diferença entre o número de peças a capturar e o número de peças já capturadas num tabuleiro.
 
 Problema   | Nº Nós Gerados   | Comprimento Caminho   | Penetrância   | Fator Ramificação Média   | Tempo Execução
 -----------|------------------|-----------------------|---------------|---------------------------|----------------
@@ -161,6 +163,20 @@ D          | 554              | 39                    | 0.07          | 20      
 E          | 534              | 35                    | 0.07          | 18                        | 0,046s
 F          | 540              | 39                    | 0.07          | 20                        | 0,077s
 G          | 792              | 52                    | 0.07          | 26.5                      | 0,114s
+
+### 6.4. Execução A*- - Heurística Personalizada
+
+A heurística personalizada consiste na diferença entre o número de peças a capturar num tabuleiro e a média de peças eliminadas.
+
+Problema   | Nº Nós Gerados   | Comprimento Caminho   | Penetrância   | Fator Ramificação Média   | Tempo Execução
+-----------|------------------|-----------------------|---------------|---------------------------|----------------
+A          | 16               | 4                     | 0,25          | 2,5                       | 0,003s
+B          | 248              | 14                    | 0,09          | 9,5                       | 0,019s
+C          | 78               | 10                    | 0,13          | 5,5                       | 0,000s
+D          | 554              | 39                    | 0.07          | 20                        | 0,043s
+E          | 534              | 35                    | 0.07          | 18                        | 0,046s
+F          | 540              | 39                    | 0.07          | 20                        | 0,077s
+G          | Não encontrado   | -                     | -             | -                         | -
 
 ## 7. Limitações técnicas e ideias para desenvolvimento futuro
 
