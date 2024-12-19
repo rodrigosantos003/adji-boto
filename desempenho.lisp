@@ -17,7 +17,7 @@
   (format t "Número nós: ~A ~%" *numero-nos-gerados*)
   (format t "Comprimento caminho: ~A ~%" (comprimento-caminho c))
   (format t "Penetrância: ~,vF ~%" 2 (penetrancia c))
-  (format t "Fator Ramificação: ~,vF ~%" 4 (float (fator-ramificacao (comprimento-caminho c) *numero-nos-gerados* 1 (comprimento-caminho c) 0.0001)))
+  (format t "Fator Ramificação: ~,vF ~%" 4 (float (fator-ramificacao (comprimento-caminho c) *numero-nos-gerados* 0 100 0.1)))
 )
 
 ;; Penetrância
@@ -49,14 +49,22 @@
   (- (soma-potencias ramificacao comprimento-caminho) total-nos))
 
 (defun metodo-bisseccao (fun a b tolerancia)
-  (if (< (- b a) tolerancia)(/ (+ a b) 2)
-      (let* ((c (/ (+ a b) 2))
-)
-        (cond
-            ((= (funcall fun c) 0) c)
-            ((< (* (funcall fun a) (funcall fun c)) 0) (metodo-bisseccao fun c b tolerancia))
-            (t (metodo-bisseccao fun a c tolerancia)))))
-)
+  (let ((fa (funcall fun a))
+        (fb (funcall fun b)))
+    (if (>= (* fa fb) 0)
+        (error "A função deve ter sinais opostos nos pontos a e b.")
+        (bisseccao-recursiva fun a b fa fb tolerancia))))
+
+(defun bisseccao-recursiva (fun a b fa fb tolerancia)
+  (let* ((c (/ (+ a b) 2))
+         (fc (funcall fun c)))
+    (cond
+      ((or (< (- b a) tolerancia) (= fc 0))
+       c)
+      ((< (* fa fc) 0)
+       (bisseccao-recursiva fun a c fa fc tolerancia))
+      (t
+       (bisseccao-recursiva fun c b fc fb tolerancia)))))
 
 ;; Tempo execução
 (defun medir-tempo (fun)
