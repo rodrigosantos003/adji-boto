@@ -102,6 +102,13 @@ O seu funcionamento processa-se da seguinte forma:
 7. Insere os sucessores válidos na lista de abertos filtrada;
 8. Realiza a chamada recursvia com as novas listas de abertos e fechados.
 
+As heurísticas implementadas são as seguintes:
+
+- Base: Diferença entre o número total de peças e as peças já capturadas num tabuleiro;
+- Personalizada: Diferença entre o número de peças e a média de peças eliminadas nas próximas jogadas que eliminam peças.
+
+Ambas as heurísticas não são admissíveis pois o valor dado pela heurística é diferente que a distância do nó atual até ao nó objetivo.
+
 ## 5. Descrição das opções tomadas
 
 Todas as decisões tiveram por base os conceitos aprendidos durante a UC de IA, nomeadamente a utilização do paradigma funcional, a abordagem recursiva e a
@@ -126,13 +133,15 @@ não só pelo seu funcionamento geral como também pelas limitações técnicas 
 Já o algoritmo DFS tem também um bom desempenho, com a salvaguarda que se deve fornecer o limite de profundidade muito próximo ao do nó objetivo ou,
 não fornecer limite de profundidade de forma a deixar o algoritmo explorar os estados tanto quanto possível.
 
+A penetrância é apresentada como 0 em alguns casos por ser um valor muito baixo, ficando nesta forma depois do arredondamento.
+
 ### 6.1. Execução BFS
 
 Problema | Nº Nós Gerados | Comprimento Caminho | Penetrância | Fator Ramificação Média| Tempo Execução
 ---------|----------------|---------------------|-------------|------------------------|-----------------
-A        | 25             | 4                   | 0,16        | 2,5                    | 0,005s
+A        | 25             | 4                   | 0,16        | 1,90                   | 0,003s
 B        | Não encontrado | -                   | -           |  -                     | -
-C        | Não encontrado | -                   | -           |  -                     | -
+C        | 3756           | 6                   | 0,00        | 3,76                   | 3,1490s
 D        | Não encontrado | -                   | -           |  -                     | -
 E        | Não encontrado | -                   | -           |  -                     | -
 F        | Não encontrado | -                   | -           |  -                     | -
@@ -142,41 +151,43 @@ G        | Não encontrado | -                   | -           |  -             
 
 Problema | Nº Nós Gerados | Comprimento Caminho | Penetrância   | Fator Ramificação Média   | Tempo Execução
 ---------|----------------|---------------------|---------------|---------------------------|-----------------
-A        | 11             | 6                   | 0,54          | 0,55                      | 0,002s
-B        | 99             | 18                  | 0,18          | 9,5                       | 0,005s
-C        | 39             | 10                  | 0,26          | 5,5                       | 0,006s
-D        | 362            | 53                  | 0,15          | 27                        | 0,058s
-E        | 809            | 108                 | 0,13          | 54,5                      | 0,321s
-F        | 809            | 108                 | 0,13          | 54,5                      | 0,498s
-G        | 741            | 101                 | 0.14          | 51                        | 0.368s
+A        | 11             | 6                   | 0,55          | 1,22                      | 0,003s
+B        | 99             | 18                  | 0,18          | 1,22                      | 0,015s
+C        | 39             | 10                  | 0,26          | 1,22                      | 0,003s
+D        | 362            | 53                  | 0,15          | 1,03                      | 0,014s
+E        | 809            | 108                 | 0,13          | 1,03                      | 0,052s
+F        | 631            | 97                  | 0,15          | 1,03                      | 0,05s
+G        | 741            | 101                 | 0.14          | 1,03                      | 0.04s
+
+(*)
 
 ### 6.3. Execução A* - Heurística Base
 
-A heurística base consiste na diferença entre o número de peças a capturar e o número de peças já capturadas num tabuleiro.
+Problema   | Nº Nós Gerados   | Comprimento Caminho   | Penetrância   | Fator Ramificação Média   | Tempo Execução
+-----------|------------------|-----------------------|---------------|---------------------------|----------------
+A          | 22               | 6                     | 0,27          | 1,42                      | 0,005s
+B          | 156              | 14                    | 0,09          | 1,32                      | 0,009s
+C          | 78               | 10                    | 0,13          | 1,32                      | 0,004s
+D          | 554              | 39                    | 0,07          | 1,12                      | 0,04s
+E          | 534              | 35                    | 0,07          | 1,12                      | 0,045s
+F          | 540              | 39                    | 0,07          | 1,12                      | 0,049s
+G          | 792              | 52                    | 0,07          | 1,12                      | 0,065s
+
+### 6.4. Execução A*- Heurística Personalizada
+
+Esta heurística encontra resultados com caminhos mais curtos, no entanto utiliza mais memória.
 
 Problema   | Nº Nós Gerados   | Comprimento Caminho   | Penetrância   | Fator Ramificação Média   | Tempo Execução
 -----------|------------------|-----------------------|---------------|---------------------------|----------------
-A          | 22               | 6                     | 0,27          | 0,55                      | 0,003s
-B          | 156              | 14                    | 0,09          | 9,5                       | 0,019s
-C          | 78               | 10                    | 0,13          | 5,5                       | 0,000s
-D          | 554              | 39                    | 0.07          | 20                        | 0,043s
-E          | 534              | 35                    | 0.07          | 18                        | 0,046s
-F          | 540              | 39                    | 0.07          | 20                        | 0,077s
-G          | 792              | 52                    | 0.07          | 26.5                      | 0,114s
+A          | 16               | 4                     | 0,25          | 1,61                      | 0,003s
+B          | 248              | 11                    | 0,04          | 1,51                      | 0,037s
+C          | 48               | 6                     | 0,12          | 1,61                      | 0,007s
+D          | 294              | 18                    | 0.06          | 1,22                      | 0,064s
+E          | 610              | 29                    | 0,05          | 1,12                      | 0,148s
+F          | 644              | 31                    | 0,05          | 1,12                      | 0,009s
+G          | 10940            | 35                    | 0,00          | 1,22                      | 17,326s (*)
 
-### 6.4. Execução A*- - Heurística Personalizada
-
-A heurística personalizada consiste na diferença entre o número de peças a capturar num tabuleiro e a média de peças eliminadas.
-
-Problema   | Nº Nós Gerados   | Comprimento Caminho   | Penetrância   | Fator Ramificação Média   | Tempo Execução
------------|------------------|-----------------------|---------------|---------------------------|----------------
-A          | 16               | 4                     | 0,25          | 2,5                       | 0,003s
-B          | 248              | 14                    | 0,09          | 9,5                       | 0,019s
-C          | 78               | 10                    | 0,13          | 5,5                       | 0,000s
-D          | 554              | 39                    | 0.07          | 20                        | 0,043s
-E          | 534              | 35                    | 0.07          | 18                        | 0,046s
-F          | 540              | 39                    | 0.07          | 20                        | 0,077s
-G          | Não encontrado   | -                     | -             | -                         | -
+(*) Neste resultado foi necessário aumentar o tamanho da stack e está a ser contabilizado o tempo gasto na execução desse comando.
 
 ## 7. Limitações técnicas e ideias para desenvolvimento futuro
 
