@@ -17,8 +17,9 @@
 4. [Algoritmos](#4-algoritmos)
 5. [Descrição das opções tomadas](#5-descrição-das-opções-tomadas)
 6. [Comparação dos Algortimos](#6-comparação-dos-algoritmos)
-7. [Limitações e ideias para desenvolvimento futuro](#7-limitações-técnicas-e-ideias-para-desenvolvimento-futuro)
-8. [Conclusão](#8-conclusão)
+7. [Limitações Técnicas](#7-limitações-técnicas)
+8. [Requisitos Não Cumpridos](#8-requisitos-não-cumpridos)
+9. [Conclusão](#9-conclusão)
 
 ## 1. Introdução
 
@@ -43,14 +44,14 @@ Projeto | Interação com o utilizador, leitura e escrita em ficheiros e carrega
 
 Existem algumas entidades inerentes aos conceitos de procura em espaços de estados. A tabela abaixo descreve as entidades usadas no presente projeto.
 
-Entidade| Descrição | Implementação
---------|-----------|---------------
-Estado  | Estado atual do problema | Tabuleiro adji-boto, representado através de lista de listas
-Nó      | Estado com informação adicional | Lista contendo o estado, nível, pai e custo
-Operador| Função que altera o estado de um nó | Função de distribuição de peças de uma posição para as seguintes
+Entidade| Descrição                                       | Implementação
+--------|-------------------------------------------------|---------------
+Estado  | Estado atual do problema                        | Tabuleiro adji-boto, representado através de lista de listas
+Nó      | Estado com informação adicional                 | Lista contendo o estado, nível, pai e custo
+Operador| Função que altera o estado de um nó             | Função de distribuição de peças de uma posição para as seguintes
 Sucessor| Novo estado quando aplicado um operador a um nó | Novo nó com aplicação do operador ao nó pai.
 Abertos | Lista com os nós que ainda não foram expandidos | Lista
-Fechados| lista com os nós que já foram expandidos | Lista
+Fechados| lista com os nós que já foram expandidos        | Lista
 
 ## 4. Algoritmos
 
@@ -70,6 +71,28 @@ O seu funcionamento processa-se da seguinte forma:
 3. Se algum dos sucessores for um nó objetivo, retorna o caminho até esse nó;
 4. Se nenhum nó objetivo for encontrado, efetua a chamada recursiva com os sucessores válidos adicionadas ao final de abertos e o nó atual adicionado a fechados.
 
+Abaixo segue a fonte do algoritmo geral:
+
+```lisp
+(defun bfs (estadoInicial &optional (abertos (list (cria-no estadoInicial))) (fechados '()))
+  (cond
+    ((null abertos) nil)  ; Se a lista de abertos estiver vazia, retorna nil
+    (t
+     (let ((sucessores-validos
+            (remove-if-not
+             (lambda (sucessor)
+               (and (not (lista-tem-no sucessor abertos))
+                    (not (lista-tem-no sucessor fechados))))
+             (sucessores (first abertos) (gerar-operadores (estado (first abertos)))))))
+       (cond
+         ((not (null (filtrar-nos-objetivos sucessores-validos)))
+          (apresentar-resultado (filtrar-nos-objetivos sucessores-validos)))
+         (t
+          (bfs estadoInicial
+               (append (rest abertos) sucessores-validos)
+               (cons (first abertos) fechados))))))))
+```
+
 ### 4.2. DFS
 
 O algoritmo DFS realiza uma procura em profundidade.
@@ -84,6 +107,27 @@ O seu funcionamento processa-se da seguinte forma:
 4. Gera os sucessores válidos do nó atual, excluindo aqueles que já se encontram em abertos ou fechados;
 5. Se algum dos sucessores for um nó objetivo, retorna o caminho até esse nó;
 6. Se nenhum nó objetivo for encontrado, efetua a chamada recursiva com os sucessores válidos adicionados ao início de abertos e o nó atual adicionado a fechados.
+
+Abaixo segue a fonte do algoritmo geral:
+
+```lisp
+(defun dfs (estadoInicial &optional (limite most-positive-fixnum) (abertos (list (cria-no estadoInicial 0))) (fechados '()))
+  (if (null abertos)
+      nil  ; Retorna nil se não encontrar solução
+      (if (>= (nivel (first abertos)) limite)  ; Se a profundidade exceder o limite, não continua
+          (dfs nil limite (rest abertos) (cons (first abertos) fechados))
+          (let ((sucessores-validos
+                 (remove-if-not 
+                  (lambda (sucessor)
+                    (and (not (lista-tem-no sucessor abertos))
+                         (not (lista-tem-no sucessor fechados))))
+                  (sucessores (first abertos) (gerar-operadores (estado (first abertos)))))))
+            (if (not (null (filtrar-nos-objetivos sucessores-validos)))
+                (apresentar-resultado (filtrar-nos-objetivos sucessores-validos))  ; Se houver objetivo, retorna o caminho
+                (dfs estadoInicial limite 
+                     (append sucessores-validos (rest abertos))
+                     (cons (first abertos) fechados)))))))
+```
 
 ### 4.3. A*
 
@@ -108,6 +152,32 @@ As heurísticas implementadas são as seguintes:
 - Personalizada: Diferença entre o número de peças e a média de peças eliminadas nas próximas jogadas que eliminam peças.
 
 Ambas as heurísticas não são admissíveis pois o valor dado pela heurística é diferente que a distância do nó atual até ao nó objetivo.
+
+Abaixo segue a fonte do algoritmo geral:
+
+```lisp
+(defun a-star (estadoInicial fHeuristica &optional (abertos (list (cria-no estadoInicial))) (fechados '()))
+  "Executa o algoritmo A* usando recursão em cauda otimizada."
+  (if (null abertos)
+      nil ; Caso a lista de abertos esteja vazia, falha.
+      (let ((no-atual (first abertos)))
+        (if (tabuleiro-vaziop (estado no-atual))
+            (apresentar-resultado no-atual) ; Se o tabuleiro estiver vazio, retorna o caminho.
+            (let* ((sucessores-validos
+                    (filtra-sucessores
+                     (sucessores no-atual (gerar-operadores (estado no-atual)) fHeuristica)
+                     (rest abertos)
+                     fechados)))
+              (a-star 
+               ;; Estado
+               nil 
+               ;; Heuristica
+               fHeuristica 
+               ;; Abertos
+               (inserir-nodes sucessores-validos (rest abertos)) 
+               ;; Fechados
+               (atualiza-fechados no-atual fechados sucessores-validos)))))))
+```
 
 ## 5. Descrição das opções tomadas
 
@@ -141,11 +211,13 @@ Problema | Nº Nós Gerados | Comprimento Caminho | Penetrância | Fator Ramific
 ---------|----------------|---------------------|-------------|------------------------|-----------------
 A        | 25             | 4                   | 0,16        | 1,90                   | 0,003s
 B        | Não encontrado | -                   | -           |  -                     | -
-C        | 3756           | 6                   | 0,00        | 3,76                   | 3,1490s
+C        | 3756           | 6                   | 0,00        | 3,76                   | 3,1490s (*)
 D        | Não encontrado | -                   | -           |  -                     | -
 E        | Não encontrado | -                   | -           |  -                     | -
 F        | Não encontrado | -                   | -           |  -                     | -
 G        | Não encontrado | -                   | -           |  -                     | -
+
+(*) Neste resultado foi necessário aumentar o tamanho da stack e está a ser contabilizado o tempo gasto na execução desse comando.
 
 ### 6.2. Execução DFS
 
@@ -158,8 +230,6 @@ D        | 362            | 53                  | 0,15          | 1,03          
 E        | 809            | 108                 | 0,13          | 1,03                      | 0,052s
 F        | 631            | 97                  | 0,15          | 1,03                      | 0,05s
 G        | 741            | 101                 | 0.14          | 1,03                      | 0.04s
-
-(*)
 
 ### 6.3. Execução A* - Heurística Base
 
@@ -189,21 +259,21 @@ G          | 10940            | 35                    | 0,00          | 1,22    
 
 (*) Neste resultado foi necessário aumentar o tamanho da stack e está a ser contabilizado o tempo gasto na execução desse comando.
 
-## 7. Limitações técnicas e ideias para desenvolvimento futuro
+## 7. Limitações Técnicas
 
 Existem algumas limitações técnias no funcionamento do presente projeto, relacionadas com as limitações de memória do IDE LispWorks.
 
-Desta forma, não é possível encontrar solução para os problemas B, C, D, E, F e G descritos no enunciado usando o algoritmo BFS.
+Desta forma, não é possível encontrar solução para os problemas B, C, D, E, F e G descritos no enunciado usando o algoritmo BFS (não aumentando o tamanho da memória stack).
 Isto deve-se ao facto de os problemas, na sua representação em grafo, possuirem o nó objetivo numa profundidade elevada, fazendo com que o método de procura em largura
 não tenha memória disponível no IDE suficiente para chegar à solução.
 
-Algumas ideias para desenvolvimento futuro são:
+## 8. Requisitos Não Cumpridos
 
-- Implementação de algoritmos de procura em espaço de estados que usem procura com memória limitado, como o IDA*, RBFS e SMA*;
-- Permitir ao utilizador adicionar problemas;
-- Gerar problemas aleatórios.
+Após o desenvolvimento do presente projeto, elencam-se os seguintes requisitos não cumpridos:
 
-## 8. Conclusão
+- Implementação dos algoritmos mais eficientes em memória, como SMA*, IDA* e RBFS.
+
+## 9. Conclusão
 
 Ao longo deste projeto, foi possível aplicar na prática os conhecimentos teóricos adquiridos na UC de IA, no que diz respeito aos algoritmos de
 procura em espaços de estados.

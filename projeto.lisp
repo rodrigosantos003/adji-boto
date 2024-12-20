@@ -4,11 +4,13 @@
 
 ;; Inicialização
 
+; Carregamento de módulos
 (load (merge-pathnames "puzzle.lisp" (current-pathname)))
 (load (merge-pathnames "procura.lisp" (current-pathname)))
 (load (merge-pathnames "desempenho.lisp" (current-pathname)))
 
 (defun inicializar-problemas ()
+  "Inicializa os problemas no ficheiro problemas.dat"
   (escrever-problema "A" (problema-a))
   (escrever-problema "B" (problema-b))
   (escrever-problema "C" (problema-c))
@@ -21,7 +23,8 @@
 ;; Leitura utilizador
 
 (defun iniciar ()
-  (resetar-contar-nos)
+  "Inicia o programa para o utilizador e solicita qual o problema a resolver"
+  (repor-contar-nos)
   (format t "Escolha um problema para resolver (de A a G): ")
   (let ((nome-problema (string-upcase (read-line))))
     (let ((resultado (obter-problema nome-problema)))
@@ -33,7 +36,7 @@
 )
 
 (defun ler-algoritmo (problema)
-  "Pede ao usuário para escolher um algoritmo e executa o algoritmo selecionado."
+  "Solicita ao utilizador um algoritmo e os respetivos argumentos"
   (format t "Escolha o algoritmo a executar (BFS, DFS ou A-STAR): ")
   (force-output)
   (let ((input (string-upcase (read-line))))
@@ -64,6 +67,7 @@
 )
 
 (defun escrever-problema (nome-problema tabuleiro-problema)
+  "Escreve um problema no ficheiro de problemas"
     (with-open-file (stream (caminho-problemas)
                           :direction :output
                           :if-exists :append
@@ -78,6 +82,7 @@
 )
 
 (defun obter-problema (nome-problema)
+  "Obtém um problema do ficheiro de problemas"
   (with-open-file (stream (caminho-problemas) :direction :input)
     (obter-problema-stream stream nome-problema)))
 
@@ -91,6 +96,7 @@
       (t (obter-problema-stream stream nome-problema)))))
 
 (defun ler-tabuleiro (stream)
+  "Lê um tabuleiro de uma stream"
   (let ((linha1 (read-line stream nil))
         (linha2 (read-line stream nil)))
     (when (and linha1 linha2)

@@ -116,4 +116,4 @@ Medidas de desempenho | Nº de nós gerados, comprimento do caminho, penetrânci
 
 ## Limitações
 
-Não é possível resolver os problemas de B a G usando o algoritmo BFS.
+Não é possível resolver os problemas de B a G usando o algoritmo BFS (não aumentando a quantidade de memória).
