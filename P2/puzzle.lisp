@@ -5,9 +5,9 @@
 
 ;;; Tabuleiros
 
-(defun tabuleiro-vazio (&optional (linhas 2) (colunas 6))
+(defun tabuleiro-vazio ()
   "Retorna um tabuleiro 2x6 (default) com as casas vazias"
-  (make-list linhas :initial-element (make-list colunas :initial-element '0))
+  '(:tabuleiro ((0 0 0 0 0 0)(0 0 0 0 0 0)) :pontuacao-1 96 :pontuacao-2 0)
 )
 
 (defun tabuleiro-teste ()
