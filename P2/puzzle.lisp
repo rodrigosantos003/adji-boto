@@ -16,35 +16,7 @@
 )
 
 (defun tabuleiro-inicial()
- '((8 8 8 8 8 8)(8 8 8 8 8 8))
-)
-
-(defun problema-a ()
-   '((0 0 0 0 0 2)(0 0 0 0 4 0))
-)
-
-(defun problema-b ()
-   '((2 2 2 2 2 2)(2 2 2 2 2 2))
-)
-
-(defun problema-c ()
-   '((0 3 0 3 0 3)(3 0 3 0 3 0))
-)
-
-(defun problema-d ()
-   '((1 2 3 4 5 6)(6 5 4 3 2 1))
-)
-
-(defun problema-e ()
-   '((2 4 6 8 10 12)(12 10 8 6 4 2))
-)
-
-(defun problema-f ()
-   '((48 0 0 0 0 0)(0 0 0 0 0 48))
-)
-
-(defun problema-g ()
-   '((8 8 8 8 8 8)(8 8 8 8 8 8))
+ '(:tabuleiro (8 8 8 8 8 8)(8 8 8 8 8 8) :pontuacao-1 0 :pontuacao-2 0)
 )
 
 ;;; Seletores
@@ -85,10 +57,10 @@
 )
 
 ;;; Operadores
-(defun distribuir-pecas (num-pecas linha col &optional (tabuleiro (tabuleiro-vazio)))
+(defun distribuir-pecas (num-pecas linha col &optional (linha-inicial linha) (col-inicial col))
   "Retorna uma lista com os pares de índices onde serão colocadas as peças, no sentido anti-horário."
-  (let* ((num-linhas (length tabuleiro))
-         (num-colunas (length (car tabuleiro))))
+  (let* ((num-linhas (length (tabuleiro-inicial)))
+         (num-colunas (length (car (tabuleiro-inicial)))))
     (cond
       ((<= num-pecas 0) '()) 
       (t
@@ -104,17 +76,17 @@
                 ((and (= col 0) (< linha (1- num-linhas))) col) ; lado esquerdo
                 ((and (= linha (1- num-linhas)) (< col (1- num-colunas))) (1+ col)) ; parte inferior
                 ((and (= col (1- num-colunas)) (> linha 0)) col)))) ; lado direito
-         
-         (cons (list proxima-linha proxima-col)
-               (distribuir-pecas (1- num-pecas) proxima-linha proxima-col tabuleiro))))))
-)
+
+         (cond ((and (= proxima-linha linha-inicial) (= proxima-col col-inicial)) (distribuir-pecas num-pecas proxima-linha proxima-col linha-inicial col-inicial))
+               (t (cons (list proxima-linha proxima-col)
+               (distribuir-pecas (1- num-pecas) proxima-linha proxima-col linha-inicial col-inicial)))))))))
 
 
-(defun aplicar-operador (tabuleiro linha-idx col-idx)
+(defun aplicar-operador (tabuleiro linha-idx col-idx jogador)
   "Aplica o operador às peças do buraco especificado."
   (let* ((pecas-a-retirar (celula linha-idx col-idx tabuleiro))
          (tabuleiro-sem-pecas (substituir linha-idx col-idx tabuleiro 0))
-         (posicoes-distribuicao (distribuir-pecas pecas-a-retirar linha-idx col-idx tabuleiro-sem-pecas))
+         (posicoes-distribuicao (distribuir-pecas pecas-a-retirar linha-idx col-idx))
          (ultima-posicao (car (last posicoes-distribuicao)))
          (ultima-linha (first ultima-posicao))
          (ultima-coluna (second ultima-posicao))
@@ -122,11 +94,11 @@
          (pecas-na-ultima (celula ultima-linha ultima-coluna novo-tabuleiro)))
     ;; Verifica se as peças na última posição são 1, 3 ou 5 para retirar as peças, senão retorna o tabuleiro com as peças distribuídas
     (let ((tabuleiro-final
-           (if (member pecas-na-ultima '(1 3 5))  ; Se a última célula tiver 1, 3 ou 5 peças
+           (if (and (/= (1+ linha-idx) jogador) (member pecas-na-ultima '(1 3 5)))  ; Corrigido: removidos os parênteses excessivos
                (substituir ultima-linha ultima-coluna novo-tabuleiro 0)  ; Zera a última célula
                novo-tabuleiro)))  ; Caso contrário, retorna o tabuleiro com as peças distribuídas normalmente
-      tabuleiro-final))
-)
+      tabuleiro-final)))
+
 
 (defun incrementar-posicoes (posicoes tabuleiro)
   (if (null posicoes) ; Caso base: lista de posições vazia
@@ -136,7 +108,7 @@
         (incrementar-posicoes (rest posicoes) ; Chamada recursiva com a cauda da lista
                                (incrementar-posicao l c tabuleiro))))) ; Incrementa a célula
 
-(defun gerar-operadores (tabuleiro &optional (linha 0) (coluna 0) (resultados '()))
+(defun gerar-operadores (tabuleiro &optional (linha 0) (coluna 0) (resultados '()) (jogador (1+ linha)))
   (if (>= linha (length tabuleiro)) ; Verifica se todas as linhas foram percorridas.
       (reverse resultados)          ; Retorna os resultados em ordem.
     (let ((nova-linha (if (>= coluna (length (nth linha tabuleiro)))
@@ -149,9 +121,9 @@
                (< coluna (length (nth linha tabuleiro)))
                (celula-distribuivelp linha coluna tabuleiro)) ; Condição customizável.
           (gerar-operadores tabuleiro nova-linha nova-coluna
-           (cons (lambda (tabuleiro) (aplicar-operador tabuleiro linha coluna))
-                 resultados)) ; Adiciona o lambda à lista.
-        (gerar-operadores tabuleiro nova-linha nova-coluna resultados)))))
+           (cons (lambda (tabuleiro) (aplicar-operador tabuleiro linha coluna jogador))
+                 resultados) jogador) ; Adiciona o lambda à lista.
+        (gerar-operadores tabuleiro nova-linha nova-coluna resultados jogador)))))
 
 
 (defun celula-distribuivelp (linha coluna matriz)
