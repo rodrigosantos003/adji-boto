@@ -12,11 +12,11 @@
 
 (defun tabuleiro-teste ()
   "Retorna um tabuleiro de teste 2x6 que corresponde ao tabuleiro d) do enunciado do projeto"
-  '((0 0 0 0 0 0)(0 0 0 0 1 2))
+  '(:tabuleiro ((4 4 4 4 4 4)(4 4 4 4 4 4)) :pontuacao-1 10 :pontuacao-2 8)
 )
 
 (defun tabuleiro-inicial()
- '(:tabuleiro (8 8 8 8 8 8)(8 8 8 8 8 8) :pontuacao-1 0 :pontuacao-2 0)
+ '(:tabuleiro ((8 8 8 8 8 8)(8 8 8 8 8 8)) :pontuacao-1 0 :pontuacao-2 0)
 )
 
 ;;; Seletores
@@ -37,7 +37,7 @@
 
 (defun tabuleiro-vaziop (tabuleiro)
   "Verifica se o tabuleiro está vazio"
-  (every (lambda (linha) (every #'zerop linha)) tabuleiro)
+  (every (lambda (linha) (every #'zerop linha)) (getf tabuleiro :tabuleiro))
 )
 
 (defun substituir-posicao (idx lista &optional (valor 0))

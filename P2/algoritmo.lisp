@@ -10,7 +10,7 @@
     ;; Verifica se o valor já foi memoizado
     (or (gethash memo-key *negamax-memo*)
         (setf (gethash memo-key *negamax-memo*)
-              (if (or (zerop depth) (terminal-p node))
+              (if (or (zerop depth) (terminalp node))
                   (* color (evaluate node)) ; Retorna o valor avaliado do nó terminal
                 (let ((children (get-children node)))
                   (reduce
