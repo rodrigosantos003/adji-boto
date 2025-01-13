@@ -17,7 +17,7 @@
 
 (defun tabuleiro-captura ()
   "Retorna um tabuleiro de teste 2x6 que corresponde ao tabuleiro d) do enunciado do projeto"
-  '(((1 1 1 1 1 1)(0 0 0 0 0 0)) 0 0)
+  '(((1 1 1 1 1 1)(2 2 2 2 2 2)) 0 0)
 )
 
 
@@ -50,9 +50,10 @@
 
 ;;; Funções auxiliares
 
-(defun tabuleiro-vazio-p (tabuleiro)
-  "Verifica se o tabuleiro está vazio."
-  (every (lambda (linha) (every #'zerop linha)) tabuleiro))
+(defun tabuleiro-vaziop (tabuleiro)
+  "Verifica se o tabuleiro está vazio"
+  (every (lambda (linha) (every #'zerop linha)) tabuleiro)
+)
 
 
 (defun substituir-posicao (idx lista &optional (valor 0))
@@ -97,7 +98,7 @@
                (distribuir-pecas (1- num-pecas) proxima-linha proxima-col linha-inicial col-inicial)))))))))
 
 
-(defun aplicar-operador (tabuleiro linha-idx col-idx jogador)
+(defun aplicar-operador (tabuleiro linha-idx col-idx)
   "Aplica o operador às peças do buraco especificado."
   (let* ((pecas-a-retirar (celula linha-idx col-idx tabuleiro))
          (tabuleiro-sem-pecas (substituir linha-idx col-idx tabuleiro 0))
@@ -109,7 +110,7 @@
          (pecas-na-ultima (celula ultima-linha ultima-coluna novo-tabuleiro)))
     ;; Verifica se as peças na última posição são 1, 3 ou 5 para retirar as peças, senão retorna o tabuleiro com as peças distribuídas
     (let ((tabuleiro-final
-           (if (and (/= (1+ linha-idx) jogador) (member pecas-na-ultima '(1 3 5)))  ; Corrigido: removidos os parênteses excessivos
+           (if (and (/= ultima-linha linha-idx) (member pecas-na-ultima '(1 3 5)))  ; Corrigido: removidos os parênteses excessivos
                (substituir ultima-linha ultima-coluna novo-tabuleiro 0)  ; Zera a última célula
                novo-tabuleiro)))  ; Caso contrário, retorna o tabuleiro com as peças distribuídas normalmente
       tabuleiro-final)))
@@ -123,7 +124,7 @@
         (incrementar-posicoes (rest posicoes) ; Chamada recursiva com a cauda da lista
                                (incrementar-posicao l c tabuleiro))))) ; Incrementa a célula
 
-(defun gerar-operadores (tabuleiro jogador &optional (linha (1- jogador)) (coluna 0) (resultados '()))
+(defun gerar-operadores (tabuleiro linha &optional (coluna 0) (resultados '()))
   (if (>= coluna (length (first tabuleiro))) ; Verifica se todas as linhas foram percorridas.
       (reverse resultados)                   ; Retorna os resultados em ordem.
       (let ((nova-coluna (if (>= coluna (length (nth linha tabuleiro)))
@@ -132,10 +133,10 @@
         (if (and (< linha (length tabuleiro)) ; Verifica se ainda está dentro da matriz.
                  (< coluna (length (nth linha tabuleiro)))
                  (celula-distribuivelp linha coluna tabuleiro)) ; Condição customizável.
-            (gerar-operadores tabuleiro jogador linha nova-coluna
-                               (cons (lambda (tabuleiro) (aplicar-operador tabuleiro linha coluna jogador))
+            (gerar-operadores tabuleiro linha nova-coluna
+                               (cons (lambda (tabuleiro) (aplicar-operador tabuleiro linha coluna))
                                      resultados)) ; Adiciona o lambda à lista.
-            (gerar-operadores tabuleiro jogador linha nova-coluna resultados))))) ; Corrigido parêntese de fechamento
+            (gerar-operadores tabuleiro linha nova-coluna resultados)))))
 
 
 

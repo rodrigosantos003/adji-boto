@@ -1,11 +1,11 @@
 ;;; Ficheiro: algoritmo.lisp
 ;;; Algoritmo AlfaBeta
-;;; Autores: Jo„o Fernandes e Rodrigo Santos
+;;; Autores: Jo√£o Fernandes e Rodrigo Santos
 
 (defun negamax (node depth alpha beta color)
   "Implementa o algoritmo NegaMax com cortes Alfa-Beta usando mapcar para processar filhos."
   (if (or (zerop depth) (terminalp node))
-      (* color (evaluate node)) ; Retorna o valor avaliado do nÛ terminal
+      (* color (evaluate node)) ; Retorna o valor avaliado do n√≥ terminal
     (let ((children (sucessores node color)))
       (reduce
        (lambda (best-score child)
@@ -19,6 +19,13 @@
 
 (defun terminalp (node)
   (tabuleiro-vaziop (estado node)))
+
+
+(defun jogada (tabuleiro cor)
+  (let ((jogadas (sucessores tabuleiro cor)))
+    (mapcar (lambda (jogada)
+              (negamax jogada 5 most-negative-fixnum most-positive-fixnum cor))
+            jogadas)))
 
 (defun evaluate (node)
   (- (pontuacao-2 node) (pontuacao-1 node)))
