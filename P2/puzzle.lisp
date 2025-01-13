@@ -7,16 +7,22 @@
 
 (defun tabuleiro-vazio ()
   "Retorna um tabuleiro 2x6 (default) com as casas vazias"
-  '(:tabuleiro ((0 0 0 0 0 0)(0 0 0 0 0 0)) :pontuacao-1 96 :pontuacao-2 0)
+  '(((0 0 0 0 0 0)(0 0 0 0 0 0)) 0 0)
 )
 
 (defun tabuleiro-teste ()
   "Retorna um tabuleiro de teste 2x6 que corresponde ao tabuleiro d) do enunciado do projeto"
-  '(:tabuleiro ((4 4 4 4 4 4)(4 4 4 4 4 4)) :pontuacao-1 10 :pontuacao-2 8)
+  '(((4 4 4 4 4 4)(4 4 4 4 4 4)) 0 0)
 )
 
+(defun tabuleiro-captura ()
+  "Retorna um tabuleiro de teste 2x6 que corresponde ao tabuleiro d) do enunciado do projeto"
+  '(((1 1 1 1 1 1)(0 0 0 0 0 0)) 0 0)
+)
+
+
 (defun tabuleiro-inicial()
- '(:tabuleiro ((8 8 8 8 8 8)(8 8 8 8 8 8)) :pontuacao-1 0 :pontuacao-2 0)
+ '(((8 8 8 8 8 8)(8 8 8 8 8 8)) 0 0)
 )
 
 ;;; Seletores
@@ -33,12 +39,21 @@
         (t (nth c (linha l tabuleiro))))
 )
 
+(defun estado (node)
+  (first node))
+
+(defun pontuacao-1 (node)
+  (second node))
+
+(defun pontuacao-2 (node)
+  (third node))
+
 ;;; Funções auxiliares
 
-(defun tabuleiro-vaziop (tabuleiro)
-  "Verifica se o tabuleiro está vazio"
-  (every (lambda (linha) (every #'zerop linha)) (getf tabuleiro :tabuleiro))
-)
+(defun tabuleiro-vazio-p (tabuleiro)
+  "Verifica se o tabuleiro está vazio."
+  (every (lambda (linha) (every #'zerop linha)) tabuleiro))
+
 
 (defun substituir-posicao (idx lista &optional (valor 0))
   (cond ((zerop idx) (cons valor (cdr lista)))
@@ -59,8 +74,8 @@
 ;;; Operadores
 (defun distribuir-pecas (num-pecas linha col &optional (linha-inicial linha) (col-inicial col))
   "Retorna uma lista com os pares de índices onde serão colocadas as peças, no sentido anti-horário."
-  (let* ((num-linhas (length (tabuleiro-inicial)))
-         (num-colunas (length (car (tabuleiro-inicial)))))
+  (let* ((num-linhas (length (estado (tabuleiro-inicial))))
+         (num-colunas (length (first (estado (tabuleiro-inicial))))))
     (cond
       ((<= num-pecas 0) '()) 
       (t
@@ -108,22 +123,20 @@
         (incrementar-posicoes (rest posicoes) ; Chamada recursiva com a cauda da lista
                                (incrementar-posicao l c tabuleiro))))) ; Incrementa a célula
 
-(defun gerar-operadores (tabuleiro &optional (linha 0) (coluna 0) (resultados '()) (jogador (1+ linha)))
-  (if (>= linha (length tabuleiro)) ; Verifica se todas as linhas foram percorridas.
-      (reverse resultados)          ; Retorna os resultados em ordem.
-    (let ((nova-linha (if (>= coluna (length (nth linha tabuleiro)))
-                          (1+ linha)
-                        linha))
-          (nova-coluna (if (>= coluna (length (nth linha tabuleiro)))
-                           0
-                         (1+ coluna))))
-      (if (and (< linha (length tabuleiro)) ; Verifica se ainda está dentro da matriz.
-               (< coluna (length (nth linha tabuleiro)))
-               (celula-distribuivelp linha coluna tabuleiro)) ; Condição customizável.
-          (gerar-operadores tabuleiro nova-linha nova-coluna
-           (cons (lambda (tabuleiro) (aplicar-operador tabuleiro linha coluna jogador))
-                 resultados) jogador) ; Adiciona o lambda à lista.
-        (gerar-operadores tabuleiro nova-linha nova-coluna resultados jogador)))))
+(defun gerar-operadores (tabuleiro jogador &optional (linha (1- jogador)) (coluna 0) (resultados '()))
+  (if (>= coluna (length (first tabuleiro))) ; Verifica se todas as linhas foram percorridas.
+      (reverse resultados)                   ; Retorna os resultados em ordem.
+      (let ((nova-coluna (if (>= coluna (length (nth linha tabuleiro)))
+                             0
+                             (1+ coluna)))) ; Corrigido parêntese
+        (if (and (< linha (length tabuleiro)) ; Verifica se ainda está dentro da matriz.
+                 (< coluna (length (nth linha tabuleiro)))
+                 (celula-distribuivelp linha coluna tabuleiro)) ; Condição customizável.
+            (gerar-operadores tabuleiro jogador linha nova-coluna
+                               (cons (lambda (tabuleiro) (aplicar-operador tabuleiro linha coluna jogador))
+                                     resultados)) ; Adiciona o lambda à lista.
+            (gerar-operadores tabuleiro jogador linha nova-coluna resultados))))) ; Corrigido parêntese de fechamento
+
 
 
 (defun celula-distribuivelp (linha coluna matriz)

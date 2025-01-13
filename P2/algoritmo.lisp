@@ -12,7 +12,7 @@
         (setf (gethash memo-key *negamax-memo*)
               (if (or (zerop depth) (terminalp node))
                   (* color (evaluate node)) ; Retorna o valor avaliado do nó terminal
-                (let ((children (get-children node)))
+                (let ((children (sucessores node color)))
                   (reduce
                    (lambda (best-score child)
                      (let ((score (- (negamax child (1- depth) (- beta) (- alpha) (- color)))))
@@ -28,14 +28,19 @@
   (clrhash *negamax-memo*))
 
 (defun terminalp (node)
-  (tabuleiro-vaziop node)
+  (tabuleiro-vaziop (estado node))
 )
 
 (defun evaluate (node)
-  (let ((pontuacao-1 (getf node :pontuacao-1)) ; Pontuação do jogador 1
-        (pontuacao-2 (getf node :pontuacao-2))) ; Pontuação do jogador 2
-    (- pontuacao-1 pontuacao-2)))
+    (- (pontuacao-1 node) (pontuacao-2 node)))
 
-(defun get-children (node)
-  "Retorna os filhos de um nó."
-  (getf node :children))
+(defun sucessores (node jogador)
+  (mapcar (lambda (op) (gerar-node node (funcall op (estado node)) jogador)) 
+          (gerar-operadores (estado node) (if (= jogador -1) 0 1))))
+
+(defun gerar-node (nodeAntigo estadoNovo color)
+  (let ((pecas-capturadas (- (soma-pecas (estado nodeAntigo)) (soma-pecas estadoNovo))))
+    (if (= color -1)
+        (list estadoNovo (pontuacao-1 nodeAntigo) (+ (pontuacao-2 nodeAntigo) pecas-capturadas))
+        (list estadoNovo (+ (pontuacao-1 nodeAntigo) pecas-capturadas) (pontuacao-2 nodeAntigo)))))
+
