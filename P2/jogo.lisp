@@ -9,85 +9,65 @@
 (load (merge-pathnames "algoritmo.lisp" (current-pathname)))
 
 ;; Leitura utilizador
-
 (defun iniciar ()
-  "Inicia o programa para o utilizador e solicita qual o modo a jogar"
-  (repor-contar-nos)
-  (format t "Escolha um modo de jogo (1-Humano vs Computador; 2-Computador vs Computador): ")
-  (let ((nome-problema (string-upcase (read-line))))
-    (let ((resultado (obter-problema nome-problema)))
-      (if resultado
-          (progn
-            (format t "Problema encontrado: ~A~%" nome-problema)
-            (ler-algoritmo resultado))
-          (format t "Problema ~A não encontrado.~%" nome-problema))))
-)
+  (format t "Escolha o modo de jogo (1-Humano vs Computador; 2-Computador vs Computador): ")
+  (let ((modo (read)))
+    (cond ((= modo 1) (humano-computador))
+          ((= modo 2) (computador-computador))
+          (t "Modo inválido"))))
 
-(defun ler-algoritmo (problema)
-  "Solicita ao utilizador um algoritmo e os respetivos argumentos"
-  (format t "Escolha o algoritmo a executar (BFS, DFS ou A-STAR): ")
-  (force-output)
-  (let ((input (string-upcase (read-line))))
-    (cond
-      ((string= input "BFS") 
-       (format t "Executando BFS...~%")
-       (executar-bfs problema))
-      ((string= input "DFS") 
-       (format t "Digite a profundidade (-1 se não quiser dar profundidade): ")
-       (let ((profundidade (read)))
-         (if (= profundidade -1)
-             (executar-dfs problema)
-             (executar-dfs problema profundidade))))
-      ((string= input "A-STAR") 
-       (format t "Indique a heurística (1- base; 2- personalizada): ")
-       (let ((heuristica (read)))
-         (cond ((= heuristica 1) (executar-a-star problema #'heuristicaBase))
-               ((= heuristica 2) (executar-a-star problema #'heuristicaPersonalizada))
-               (t (format t "Opção inválida. ~%")))))
-      (t 
-       (format t "Opção inválida.~%")))))
+(defun jogar (node)
+  "Avalia os sucessores do nó usando NegaMax e retorna o índice do melhor movimento e o novo nó."
+  (let* ((depth 3)
+         (color 1)
+         (children (sucessores node color))
+         (start-time (get-internal-real-time)))
+    (if children
+        (progn
+          (let* ((result (melhor-jogada-recursiva children depth color 0 most-negative-fixnum nil nil))
+                 (end-time (get-internal-real-time))
+                 (time-spent (float (/ (- end-time start-time) internal-time-units-per-second))))
+            (escrever-jogada node time-spent)
+            (repor-contagem) 
+            result))
+        (list nil node)))) ; Retorna nil como índice se não houver sucessores
 
+(defun melhor-jogada-recursiva (sucessores depth color index melhor-score melhor-index melhor-node)
+  "Função recursiva auxiliar para encontrar a melhor jogada."
+  (if (null sucessores)
+      (list melhor-index melhor-node)
+      (let* ((current-node (car sucessores))
+             (score (negamax current-node depth most-negative-fixnum most-positive-fixnum color)))
+        (if (> score melhor-score)
+            (melhor-jogada-recursiva (cdr sucessores) depth color (1+ index) score index current-node)
+            (melhor-jogada-recursiva (cdr sucessores) depth color (1+ index) melhor-score melhor-index melhor-node)))))
 
-;; Escrita e leitura em ficheiros
+(defun humano-computador ()
+  (format t "Quer iniciar primeiro? (1-Sim; 2-Não): ")
+  (let* ((inicio (read))
+         (jogador-humano (if (= inicio 1) 1 -1))
+         (jogador-computador (- jogador-humano)))
+    (format t "Indique o tempo limite para o computador (em milissegundos): ")
+    (let ((tempo (read)))
+      (format t "Iniciar jogo"))))
 
-(defun caminho-problemas ()
+(defun computador-computador ()
+  (format t "Indique o tempo limite para os computadores (em milissegundos): ")
+  (let* ((tempo (read))
+         (jogador1 1)
+         (jogador2 -1))
+    (format t "Iniciando jogo Computador vs Computador...~%")
+    (format t "Iniciar jogo")))
+
+;; Escrita em ficheiros
+(defun caminho-logs ()
   "./log.dat"
 )
 
-(defun escrever-problema (nome-problema tabuleiro-problema)
-  "Escreve um problema no ficheiro de problemas"
-    (with-open-file (stream (caminho-problemas)
-                          :direction :output
-                          :if-exists :append
-                          :if-does-not-exist :create)
-     (format stream "~A~%" nome-problema)
-    (dolist (sublista tabuleiro-problema)
+(defun escrever-jogada (node tempo)
+  (with-open-file (stream (caminho-logs):direction :output :if-exists :append :if-does-not-exist :create)
+    (format stream "Jogada:~%")
+    (dolist (sublista (estado node))
       (format stream "~{~A~^ ~}~%" sublista))
-    )
-    
-    (format t "Problema escrito com sucesso ~%")
-    T
+    (format stream "Nos analisados: ~A | Cortes: ~A | Tempo gasto (s): ~A~%" *numero-nos-analisados* *numero-cortes* tempo))
 )
-
-(defun obter-problema (nome-problema)
-  "Obtém um problema do ficheiro de problemas"
-  (with-open-file (stream (caminho-problemas) :direction :input)
-    (obter-problema-stream stream nome-problema)))
-
-(defun obter-problema-stream (stream nome-problema)
-  (let ((linha (read-line stream nil)))
-    (cond
-      ((null linha) nil)
-      ((string= linha nome-problema) 
-       (let ((tabuleiro (ler-tabuleiro stream)))
-         tabuleiro))
-      (t (obter-problema-stream stream nome-problema)))))
-
-(defun ler-tabuleiro (stream)
-  "Lê um tabuleiro de uma stream"
-  (let ((linha1 (read-line stream nil))
-        (linha2 (read-line stream nil)))
-    (when (and linha1 linha2)
-      (list 
-       (read-from-string (concatenate 'string "(" linha1 ")"))
-       (read-from-string (concatenate 'string "(" linha2 ")"))))))

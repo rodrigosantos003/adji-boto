@@ -2,17 +2,23 @@
 ;;; Algoritmo AlfaBeta
 ;;; Autores: João Fernandes e Rodrigo Santos
 
-(defun negamax (node depth alpha beta color)
+(defparameter *numero-nos-analisados* 0.0)
+(defparameter *numero-cortes* 0.0)
+
+(defun negamax (node depth &optional (alpha most-negative-fixnum) (beta most-positive-fixnum) (color 1))
   "Implementa o algoritmo NegaMax com cortes Alfa-Beta usando mapcar para processar filhos."
   (if (or (zerop depth) (terminalp node))
       (* color (evaluate node)) ; Retorna o valor avaliado do nó terminal
     (let ((children (sucessores node color)))
       (reduce
        (lambda (best-score child)
+         (incrementar-nos) ; Incrementa o contador para cada sucessor individual
          (let ((score (- (negamax child (1- depth) (- beta) (- alpha) (- color)))))
            (let ((new-alpha (max alpha score)))
              (if (>= new-alpha beta)
-                 (return-from negamax new-alpha) ; Corta beta
+                 (progn
+                   (incrementar-cortes) ; Incrementa o contador de cortes
+                   (return-from negamax new-alpha)) ; Corta beta
                (max best-score score)))))
        children
        :initial-value most-negative-fixnum))))
@@ -35,3 +41,17 @@
 
 (defun linha-jogador (color)
   (if (= color -1) 0 1))
+
+(defun incrementar-nos ()
+  "Incrementa o contador de nós analisados"
+  (incf *numero-nos-analisados*))
+
+(defun incrementar-cortes ()
+  "Incrementa o contador de cortes"
+  (incf *numero-cortes*))
+
+(defun repor-contagem ()
+  "Repõe a contagem de nós analisados e de cortes"
+  (setf *numero-nos-analisados* 0.0)
+  (setf *numero-cortes* 0.0)
+)
