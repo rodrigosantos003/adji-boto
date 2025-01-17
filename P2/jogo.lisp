@@ -27,7 +27,7 @@
           (let* ((result (melhor-jogada-recursiva children depth color 0 most-negative-fixnum nil nil))
                  (end-time (get-internal-real-time))
                  (time-spent (float (/ (- end-time start-time) internal-time-units-per-second))))
-            (escrever-jogada node time-spent)
+            (apresentar-jogada node time-spent)
             (repor-contagem) 
             result))
         (list nil node)))) ; Retorna nil como índice se não houver sucessores
@@ -64,10 +64,13 @@
   "./log.dat"
 )
 
-(defun escrever-jogada (node tempo)
-  (with-open-file (stream (caminho-logs):direction :output :if-exists :append :if-does-not-exist :create)
-    (format stream "Jogada:~%")
-    (dolist (sublista (estado node))
-      (format stream "~{~A~^ ~}~%" sublista))
+(defun escrever-jogada (node tempo stream)
+  (format stream "Jogada:~%")
+  (dolist (sublista (estado node))
+    (format stream "~{~A~^ ~}~%" sublista))
     (format stream "Nos analisados: ~A | Cortes: ~A | Tempo gasto (s): ~A~%" *numero-nos-analisados* *numero-cortes* tempo))
+
+(defun apresentar-jogada (node tempo)
+  (escrever-jogada node tempo t)
+  (with-open-file (stream (caminho-logs):direction :output :if-exists :append :if-does-not-exist :create) (escrever-jogada node tempo stream))
 )
