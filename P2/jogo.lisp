@@ -28,7 +28,6 @@
                  (end-time (get-internal-real-time))
                  (time-spent (float (/ (- end-time start-time) internal-time-units-per-second))))
             (apresentar-jogada node time-spent)
-            (repor-contagem) 
             result))
         (list nil node)))) ; Retorna nil como índice se não houver sucessores
 
@@ -42,15 +41,63 @@
             (melhor-jogada-recursiva (cdr sucessores) depth color (1+ index) score index current-node)
             (melhor-jogada-recursiva (cdr sucessores) depth color (1+ index) melhor-score melhor-index melhor-node)))))
 
+
+;; Humano vs Computador
 (defun humano-computador ()
   (format t "Quer iniciar primeiro? (1-Sim; 2-Não): ")
   (let* ((inicio (read))
          (jogador-humano (if (= inicio 1) 1 -1))
          (jogador-computador (- jogador-humano)))
-    (format t "Indique o tempo limite para o computador (em milissegundos): ")
-    (let ((tempo (read)))
-      (format t "Iniciar jogo"))))
+    (jogar-humano-computador (tabuleiro-inicial) jogador-humano jogador-computador)))
 
+(defun jogar-humano-computador (node jogador-humano jogador-computador)
+  "Gerencia as jogadas entre o jogador humano e o computador."
+  ;; Jogada do jogador humano
+  (format t "Turno do jogador humano.~%")
+  
+  ;; Inicia o temporizador para a jogada do humano
+  (let ((inicio-tempo (get-internal-real-time)))
+    ;; Atualiza o nó com a jogada do jogador humano e obtém o novo estado
+    (let ((novo-node (ler-jogada-humano node jogador-humano)))
+      ;; Calcula o tempo gasto na jogada
+      (let ((tempo-gasto (/ (- (get-internal-real-time) inicio-tempo)
+                             internal-time-units-per-second))) ; em segundos
+        ;; Apresentar a jogada com o tempo gasto
+        (apresentar-jogada novo-node tempo-gasto))
+
+      ;; Verificar se o jogo terminou após a jogada do humano
+      (when (jogo-terminado-p novo-node)
+        (format t "O jogador humano venceu!~%")
+        (return-from jogar-humano-computador))
+
+      ;; Jogada do computador
+      (format t "Turno do computador.~%")
+      (let* ((result (jogar novo-node))
+             (novo-node-computador (second result)))
+        ;; Apresentar a jogada do computador
+        (apresentar-jogada novo-node-computador 0) ; Preserva o zero para o computador
+
+        ;; Verificar se o jogo terminou após a jogada do computador
+        (when (jogo-terminado-p novo-node-computador)
+          (format t "O computador venceu!~%")
+          (return-from jogar-humano-computador))
+
+        ;; Chama recursivamente para o próximo turno
+        (jogar-humano-computador novo-node-computador jogador-humano jogador-computador)))))
+
+
+(defun ler-jogada-humano (node jogador)
+  "Lê a jogada do jogador humano, atualiza o estado do nó e retorna o novo nó."
+  (format t "Indique a coluna onde pretende jogar (entre 1 e 6): ")
+  (let ((coluna (read)))
+      ;; Retornar o novo nó atualizado
+      (gerar-node node (aplicar-operador (estado node) (linha-jogador jogador) coluna) jogador)))
+
+(defun jogo-terminado-p (node)
+  "Verifica se o jogo terminou."
+  (tabuleiro-vaziop (estado node)))
+
+;; Computador vs Computador
 (defun computador-computador ()
   (format t "Indique o tempo limite para os computadores (em milissegundos): ")
   (let* ((tempo (read))
@@ -73,4 +120,5 @@
 (defun apresentar-jogada (node tempo)
   (escrever-jogada node tempo t)
   (with-open-file (stream (caminho-logs):direction :output :if-exists :append :if-does-not-exist :create) (escrever-jogada node tempo stream))
+  (repor-contagem)
 )

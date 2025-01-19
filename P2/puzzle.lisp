@@ -138,8 +138,6 @@
                                      resultados)) ; Adiciona o lambda à lista.
             (gerar-operadores tabuleiro linha nova-coluna resultados)))))
 
-
-
 (defun celula-distribuivelp (linha coluna matriz)
   "Retorna T se a célula tem peças suficientes para uma distribuição válida."
   (let ((valor (celula linha coluna matriz)))
