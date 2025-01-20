@@ -55,6 +55,9 @@
   (every (lambda (linha) (every #'zerop linha)) tabuleiro)
 )
 
+(defun linha-vaziap (linha)
+  (every #'zerop linha)
+)
 
 (defun substituir-posicao (idx lista &optional (valor 0))
   (cond ((zerop idx) (cons valor (cdr lista)))
