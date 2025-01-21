@@ -128,18 +128,19 @@
                                (incrementar-posicao l c tabuleiro))))) ; Incrementa a célula
 
 (defun gerar-operadores (tabuleiro linha &optional (coluna 0) (resultados '()))
-  (if (>= coluna (length (first tabuleiro))) ; Verifica se todas as linhas foram percorridas.
+  (if (>= coluna (length (first tabuleiro))) ; Verifica se todas as colunas foram percorridas.
       (reverse resultados)                   ; Retorna os resultados em ordem.
       (let ((nova-coluna (if (>= coluna (length (nth linha tabuleiro)))
                              0
                              (1+ coluna))))
-        (if (and (< linha (length tabuleiro)) ; Verifica se ainda está dentro da matriz.
-                 (< coluna (length (nth linha tabuleiro)))
-                 (celula-distribuivelp linha coluna tabuleiro)) ; Condição customizável.
-            (gerar-operadores tabuleiro linha nova-coluna
-                               (cons (lambda (tabuleiro) (aplicar-operador tabuleiro linha coluna))
-                                     resultados)) ; Adiciona o lambda à lista.
-            (gerar-operadores tabuleiro linha nova-coluna resultados)))))
+        (gerar-operadores tabuleiro linha nova-coluna
+         (cons (if (and (< linha (length tabuleiro)) ; Verifica se ainda está dentro da matriz.
+                        (< coluna (length (nth linha tabuleiro)))
+                        (celula-distribuivelp linha coluna tabuleiro)) ; Condição customizável.
+                   (lambda (tabuleiro) (aplicar-operador tabuleiro linha coluna)) ; Lambda para células válidas.
+                   nil)
+               resultados)))))
+
 
 (defun celula-distribuivelp (linha coluna matriz)
   "Retorna T se a célula tem peças suficientes para uma distribuição válida."

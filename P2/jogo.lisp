@@ -24,7 +24,7 @@
          (start-time (get-internal-real-time)))
     (if children
         (progn
-          (let* ((result (melhor-jogada-recursiva jogador children depth color 0 most-negative-fixnum nil nil))
+          (let* ((result (melhor-jogada-recursiva jogador children depth color 1 most-negative-fixnum nil nil))
                  (end-time (get-internal-real-time))
                  (time-spent (float (/ (- end-time start-time) internal-time-units-per-second))))
             (apresentar-jogada result time-spent)
@@ -35,11 +35,14 @@
   "Função recursiva auxiliar para encontrar a melhor jogada."
   (if (null sucessores)
       (list melhor-index melhor-node)
-      (let* ((current-node (car sucessores))
-             (score (negamax current-node depth jogador most-negative-fixnum most-positive-fixnum color)))
-        (if (> score melhor-score)
-            (melhor-jogada-recursiva jogador (cdr sucessores) depth color (1+ index) score index current-node)
-            (melhor-jogada-recursiva jogador (cdr sucessores) depth color (1+ index) melhor-score melhor-index melhor-node)))))
+      (let* ((current-node (car sucessores)))
+        (if (not current-node) ; Verifica se o sucessor é nil
+            (melhor-jogada-recursiva jogador (cdr sucessores) depth color (1+ index) melhor-score melhor-index melhor-node)
+            (let ((score (negamax current-node depth jogador most-negative-fixnum most-positive-fixnum color)))
+              (if (> score melhor-score)
+                  (melhor-jogada-recursiva jogador (cdr sucessores) depth color (1+ index) score index current-node)
+                  (melhor-jogada-recursiva jogador (cdr sucessores) depth color (1+ index) melhor-score melhor-index melhor-node)))))))
+
 
 
 ;; Humano vs Computador
