@@ -48,66 +48,97 @@
   (let* ((inicio (read))
          (jogador-humano (if (= inicio 1) 1 2))
          (jogador-computador (alternar-jogador jogador-humano)))
-    (jogar-humano-computador (tabuleiro-inicial) jogador-humano jogador-computador)))
+    (jogar-humano-computador (tabuleiro-captura) jogador-humano jogador-computador (if (= jogador-computador 1) t nil))))
 
-(defun jogar-humano-computador (node jogador-humano jogador-computador computador-inicial)
-  "Gerencia as jogadas entre o jogador humano e o computador."
+
+(defun jogar-humano (node jogador-humano)
+  "Gerencia a jogada do jogador humano."
+  ;; Verifica se há jogadas disponíveis
+  (if (linha-vaziap (nth (linha-jogador jogador-humano) (estado node)))
+      (progn
+        (format t "Não há mais jogadas disponíveis para o jogador humano (~A).~%" jogador-humano)
+        node) ;; Indica que não há jogada possível
+    (progn
+      (format t "~%~%Turno do jogador humano (~A).~%" jogador-humano)
+      (let* ((inicio-tempo (get-internal-real-time))
+             (jogada-humano (ler-jogada-humano node jogador-humano))
+             (tempo-gasto (/ (- (get-internal-real-time) inicio-tempo)
+                             internal-time-units-per-second))) ; em segundos
+        ;; Apresenta a jogada e o tempo gasto
+        (apresentar-jogada jogada-humano tempo-gasto)
+          (jogada-node jogada-humano))))) ;; Retorna o novo estado do nó
+
+(defun jogar-computador (node jogador-computador)
+  "Gerencia a jogada do computador."
+  ;; Verifica se há jogadas disponíveis
+  (if (linha-vaziap (nth (linha-jogador jogador-computador) (estado node)))
+      (progn
+        (format t "Não há mais jogadas disponíveis para o jogador computador (~A).~%" jogador-computador)
+        node) ;; Indica que não há jogada possível
+    (progn
+      (format t "~%~%Turno do computador (~A).~%" jogador-computador)
+      (let ((jogada-computador (jogar node jogador-computador)))
+          (jogada-node jogada-computador))))) ;; Retorna o novo estado do nó
+
+(defun jogar-humano-computador (node jogador-humano jogador-computador computador-primeiro)
+  "Gerencia as jogadas entre o jogador humano e o computador.
+   Se `computador-primeiro` for verdadeiro, o computador joga primeiro."
+  (when computador-primeiro
+    ;; Jogada inicial do computador, se for o primeiro
+    (setf node (jogar-computador node jogador-computador))
+    (unless node
+      (return-from jogar-humano-computador))) ;; Encerra se o jogo terminar após a jogada inicial do computador
+
   (loop
-    ;; Verifica se o jogador humano pode jogar
-    (when (linha-vaziap (nth (linha-jogador jogador-humano) (estado node)))
-      (format t "Não há mais jogadas disponíveis para o jogador humano.~%")
-      (return-from jogar-humano-computador))
+     ;; Jogada do jogador humano
+    (setf node (jogar-humano node jogador-humano))
 
-    ;; Jogada do jogador humano
-    (format t "~%~%Turno do jogador humano.~%")
+    (print node)
 
-    ;; Inicia o temporizador para a jogada do humano
-    (let ((inicio-tempo (get-internal-real-time)))
-      ;; Atualiza o nó com a jogada do jogador humano e obtém o novo estado
-      (let ((jogada-humano (ler-jogada-humano node jogador-humano)))
-        ;; Calcula o tempo gasto na jogada
-        (let ((tempo-gasto (/ (- (get-internal-real-time) inicio-tempo)
-                               internal-time-units-per-second))) ; em segundos
-          ;; Apresentar a jogada com o tempo gasto
-          (apresentar-jogada jogada-humano tempo-gasto))
-
-      ;; Verificar se o jogo terminou após a jogada do humano
-      (when (jogo-terminado-p (jogada-node jogada-humano))
-        (format t "O jogador humano venceu!~%")
-        (return-from jogar-humano-computador))
-
-      (setf node (jogada-node jogada-humano))
-
-      (when (linha-vaziap (nth (linha-jogador jogador-computador) (estado node)))
-      (format t "Não há mais jogadas disponíveis para o jogador computador.~%")
-      (return-from jogar-humano-computador))
+    (if (jogo-terminado-p node)
+        (progn
+          (if (= (maximo-pontos node) jogador-humano) (format t "O jogador humano (~A) venceu!" jogador-humano)
+            (format t "O jogador computador (~A) venceu!" jogador-computador))
+          (return-from jogar-humano-computador)))
 
     ;; Jogada do computador
-    (format t "~%~%Turno do computador.~%")
-    (let* ((jogada-computador (jogar node jogador-computador)))
-
-      ;; Verificar se o jogo terminou após a jogada do computador
-      (when (jogo-terminado-p (jogada-node jogada-computador))
-        (format t "O computador venceu!~%")
-        (return-from jogar-humano-computador))
-
-     (setf node (jogada-node jogada-computador)))))))
-
-
-
-
+    (setf node (jogar-computador node jogador-computador))
+     (print node)
+    (if (jogo-terminado-p node)
+        (progn
+          (if (= (maximo-pontos node) jogador-humano) (format t "O jogador humano (~A) venceu!" jogador-humano)
+            (format t "O jogador computador (~A) venceu!" jogador-computador))
+          (return-from jogar-humano-computador)))))
 
 
 (defun ler-jogada-humano (node jogador)
-  "Lê a jogada do jogador humano, atualiza o estado do nó e retorna o novo nó."
-  (format t "Indique a coluna onde pretende jogar (entre 1 e 6): ")
-  (let ((coluna (read)))
-      ;; Retornar o novo nó atualizado
-      (list coluna (gerar-node node (aplicar-operador (estado node) (linha-jogador jogador) (- coluna 1)) jogador))))
+  "Lê a jogada do jogador humano, valida se a coluna tem peças disponíveis,
+   atualiza o estado do nó e retorna o novo nó."
+  (let ((jogada-valida nil)) ;; Variável para armazenar a jogada válida
+    ;; Loop para garantir que a jogada é válida
+    (loop
+      (format t "Indique a coluna onde pretende jogar (entre 1 e 6): ")
+      (let ((coluna (read))) ;; Lê a coluna escolhida pelo jogador
+        ;; Verifica se a coluna é válida usando `celula-distribuivelp`
+        (if (and (integerp coluna) ;; Garante que é um número inteiro
+                 (>= coluna 1) (<= coluna 6) ;; Garante que está no intervalo permitido
+                 (celula-distribuivelp (linha-jogador jogador) (- coluna 1) (estado node)))
+            (progn
+              (setf jogada-valida coluna) ;; Armazena a jogada válida
+              (return)) ;; Sai do loop
+          (format t "A coluna escolhida não é válida ou está vazia. Por favor, escolha outra.~%"))))
+    ;; Retorna o novo nó atualizado com a jogada válida
+    (list jogada-valida
+          (gerar-node node (aplicar-operador (estado node) (linha-jogador jogador) (- jogada-valida 1)) jogador))))
+
 
 (defun jogo-terminado-p (node)
   "Verifica se o jogo terminou."
   (tabuleiro-vaziop (estado node)))
+
+(defun maximo-pontos (node)
+  (if (> (pontuacao-1 node) (pontuacao-2 node)) 1 2)
+)
 
 ;; Computador vs Computador
 (defun computador-computador ()
@@ -151,3 +182,6 @@
 (defun jogada-node (jogada)
   (second jogada)
 )
+
+(defun linha-jogador (jogador)
+  (- jogador 1))

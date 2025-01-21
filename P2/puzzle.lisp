@@ -132,7 +132,7 @@
       (reverse resultados)                   ; Retorna os resultados em ordem.
       (let ((nova-coluna (if (>= coluna (length (nth linha tabuleiro)))
                              0
-                             (1+ coluna)))) ; Corrigido parêntese
+                             (1+ coluna))))
         (if (and (< linha (length tabuleiro)) ; Verifica se ainda está dentro da matriz.
                  (< coluna (length (nth linha tabuleiro)))
                  (celula-distribuivelp linha coluna tabuleiro)) ; Condição customizável.

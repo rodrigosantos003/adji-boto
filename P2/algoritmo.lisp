@@ -6,13 +6,13 @@
 (defparameter *numero-cortes* 0.0)
 
 (defun negamax (node depth jogador &optional (alpha most-negative-fixnum) (beta most-positive-fixnum) (color 1))
-  "Implementa o algoritmo NegaMax com cortes Alfa-Beta usando mapcar para processar filhos."
+  "Implementa o algoritmo NegaMax com cortes Alfa-Beta. Trata nós sem sucessores válidos gerando um 'sucessor' igual ao estado atual."
   (if (or (zerop depth) (terminalp node))
       (* color (evaluate node jogador)) ; Retorna o valor avaliado do nó terminal
-    (let ((children (sucessores node jogador)))
+    (let ((children (or (sucessores node jogador) (list node)))) ; Se não houver sucessores, usa o estado atual
       (reduce
        (lambda (best-score child)
-         (incrementar-nos) ; Incrementa o contador para cada sucessor individual
+         (incrementar-nos) ; Incrementa o contador para cada sucessor processado
          (let ((score (- (negamax child (1- depth) (alternar-jogador jogador) (- beta) (- alpha) (- color)))))
            (let ((new-alpha (max alpha score)))
              (if (>= new-alpha beta)
@@ -22,6 +22,8 @@
                (max best-score score)))))
        children
        :initial-value most-negative-fixnum))))
+
+
 
 (defun terminalp (node)
   (tabuleiro-vaziop (estado node)))
@@ -42,9 +44,6 @@
     (if (= jogador 1)
         (list estadoNovo (+ (pontuacao-1 nodeAntigo) pecas-capturadas) (pontuacao-2 nodeAntigo))
         (list estadoNovo (pontuacao-1 nodeAntigo) (+ (pontuacao-2 nodeAntigo) pecas-capturadas)))))
-
-(defun linha-jogador (jogador)
-  (- jogador 1))
 
 (defun incrementar-nos ()
   "Incrementa o contador de nós analisados"
