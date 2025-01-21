@@ -54,29 +54,37 @@
 (defun jogar-humano (node jogador-humano)
   "Gerencia a jogada do jogador humano."
   ;; Verifica se há jogadas disponíveis
+  (format t "TABULEIRO ATUAL:~%")
+  (apresentar-tabuleiro (estado node) t)
+  (format t "--------------------------------------~%")
+
+  (format t "Turno do jogador humano (~A).~%" jogador-humano)
   (if (linha-vaziap (nth (linha-jogador jogador-humano) (estado node)))
       (progn
         (format t "Não há mais jogadas disponíveis para o jogador humano (~A).~%" jogador-humano)
         node) ;; Indica que não há jogada possível
     (progn
-      (format t "~%~%Turno do jogador humano (~A).~%" jogador-humano)
       (let* ((inicio-tempo (get-internal-real-time))
              (jogada-humano (ler-jogada-humano node jogador-humano))
              (tempo-gasto (/ (- (get-internal-real-time) inicio-tempo)
                              internal-time-units-per-second))) ; em segundos
         ;; Apresenta a jogada e o tempo gasto
         (apresentar-jogada jogada-humano tempo-gasto)
-          (jogada-node jogada-humano))))) ;; Retorna o novo estado do nó
+        (jogada-node jogada-humano))))) ;; Retorna o novo estado do nó
 
 (defun jogar-computador (node jogador-computador)
   "Gerencia a jogada do computador."
+  (format t "TABULEIRO ATUAL:~%")
+  (apresentar-tabuleiro (estado node) t)
+  (format t "--------------------------------------~%")
+
+  (format t "Turno do jogador computador (~A).~%" jogador-computador)
   ;; Verifica se há jogadas disponíveis
   (if (linha-vaziap (nth (linha-jogador jogador-computador) (estado node)))
       (progn
         (format t "Não há mais jogadas disponíveis para o jogador computador (~A).~%" jogador-computador)
         node) ;; Indica que não há jogada possível
     (progn
-      (format t "~%~%Turno do computador (~A).~%" jogador-computador)
       (let ((jogada-computador (jogar node jogador-computador)))
           (jogada-node jogada-computador))))) ;; Retorna o novo estado do nó
 
@@ -93,8 +101,6 @@
      ;; Jogada do jogador humano
     (setf node (jogar-humano node jogador-humano))
 
-    (print node)
-
     (if (jogo-terminado-p node)
         (progn
           (if (= (maximo-pontos node) jogador-humano) (format t "O jogador humano (~A) venceu!" jogador-humano)
@@ -103,7 +109,7 @@
 
     ;; Jogada do computador
     (setf node (jogar-computador node jogador-computador))
-     (print node)
+
     (if (jogo-terminado-p node)
         (progn
           (if (= (maximo-pontos node) jogador-humano) (format t "O jogador humano (~A) venceu!" jogador-humano)
@@ -142,12 +148,23 @@
 
 ;; Computador vs Computador
 (defun computador-computador ()
-  (format t "Indique o tempo limite para os computadores (em milissegundos): ")
-  (let* ((tempo (read))
-         (jogador1 1)
-         (jogador2 -1))
-    (format t "Iniciando jogo Computador vs Computador...~%")
-    (format t "Iniciar jogo")))
+    (jogar-computador-computador (tabuleiro-captura)))
+
+(defun jogar-computador-computador (node)
+  (loop
+     ;; Jogada do computador 1
+     (setf node (jogar-computador node 1))
+     (when (jogo-terminado-p node)
+       (progn
+         (format t "O jogador computador (~A) venceu!~%" (maximo-pontos node))
+         (return)))
+
+     ;; Jogada do computador 2
+     (setf node (jogar-computador node 2))
+     (when (jogo-terminado-p node)
+       (progn
+         (format t "O jogador computador (~A) venceu!~%" (maximo-pontos node))
+         (return)))))
 
 ;; Escrita em ficheiros
 (defun caminho-logs ()
@@ -156,16 +173,20 @@
 
 (defun escrever-jogada (jogada tempo stream)
   (format stream "Jogada (coluna ~A):~%" (jogada-coluna jogada))
-  (dolist (sublista (jogada-estado jogada))
-    (format stream "~{~A~^ ~}~%" sublista))
-    (format stream "Pontuação: [Jogador 1 - ~A] | [Jogador 2 - ~A] ~%" (pontuacao-1 (jogada-node jogada)) (pontuacao-2 (jogada-node jogada)))
-    (format stream "Nos analisados: ~A | Cortes: ~A | Tempo gasto (s): ~A~%" *numero-nos-analisados* *numero-cortes* tempo))
+  (apresentar-tabuleiro (jogada-estado jogada) stream)
+  (format stream "Pontuação: [Jogador 1 - ~A] | [Jogador 2 - ~A] ~%" (pontuacao-1 (jogada-node jogada)) (pontuacao-2 (jogada-node jogada)))
+  (format stream "Nos analisados: ~A | Cortes: ~A | Tempo gasto (s): ~A~%" *numero-nos-analisados* *numero-cortes* tempo)
+  (format stream "--------------------------------------~%~%~%"))
 
 (defun apresentar-jogada (jogada tempo)
   (escrever-jogada jogada tempo t)
   (with-open-file (stream (caminho-logs):direction :output :if-exists :append :if-does-not-exist :create) (escrever-jogada jogada tempo stream))
   (repor-contagem)
 )
+
+(defun apresentar-tabuleiro (tabuleiro stream)
+(dolist (sublista tabuleiro)
+    (format stream "~{~A~^ ~}~%" sublista)))
 
 (defun alternar-jogador (jogador)
   (if (= jogador 1) 2 1)
