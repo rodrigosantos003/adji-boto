@@ -7,22 +7,19 @@
 
 
 (defun negamax (node depth jogador &optional (alpha most-negative-fixnum) (beta most-positive-fixnum) (color 1))
-  "Implementa o algoritmo NegaMax com cortes Alfa-Beta. Trata nós sem sucessores válidos gerando um 'sucessor' igual ao estado atual."
   (if (or (zerop depth) (terminalp node))
-      (* color (evaluate node jogador)) ; Retorna o valor avaliado do nó terminal
-    (let ((children (or (remove nil (sucessores node jogador)) (list node)))) ; Remove `nil` dos sucessores
-      (reduce
-       (lambda (best-score child)
-         (incrementar-nos) ; Incrementa o contador para cada sucessor processado
-         (let ((score (- (negamax child (1- depth) (alternar-jogador jogador) (- beta) (- alpha) (- color)))))
-           (let ((new-alpha (max alpha score)))
-             (if (>= new-alpha beta)
-                 (progn
-                   (incrementar-cortes) ; Incrementa o contador de cortes
-                   (return-from negamax new-alpha)) ; Corta beta
-               (max best-score score)))))
-       children
-       :initial-value most-negative-fixnum))))
+      (* color (evaluate node jogador))
+    (let ((children (or (remove nil (sucessores node jogador)) (list node))))
+      (dolist (child children alpha)
+        (incrementar-nos)
+        (let ((score (- (negamax child (1- depth) (alternar-jogador jogador) (- beta) (- alpha) (- color)))))
+          (format t "alpha=~A beta=~A score=~A~%" alpha beta score)
+          (setf alpha (max alpha score))
+          (when (>= alpha beta)
+            (incrementar-cortes)
+            (format t "Corte beta: alpha=~A beta=~A~%" alpha beta)
+            (return beta)))))))
+
 
 
 
