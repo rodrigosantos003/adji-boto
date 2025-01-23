@@ -44,14 +44,13 @@
                   (melhor-jogada-recursiva jogador (cdr sucessores) depth color (1+ index) melhor-score melhor-index melhor-node)))))))
 
 
-
 ;; Humano vs Computador
 (defun humano-computador ()
   (format t "Quer iniciar primeiro? (1-Sim; 2-Não): ")
   (let* ((inicio (read))
          (jogador-humano (if (= inicio 1) 1 2))
          (jogador-computador (alternar-jogador jogador-humano)))
-    (jogar-humano-computador (tabuleiro-captura) jogador-humano jogador-computador (if (= jogador-computador 1) t nil))))
+    (jogar-humano-computador (tabuleiro-inicial) jogador-humano jogador-computador (if (= jogador-computador 1) t nil))))
 
 
 (defun jogar-humano (node jogador-humano)
@@ -151,7 +150,7 @@
 
 ;; Computador vs Computador
 (defun computador-computador ()
-    (jogar-computador-computador (tabuleiro-captura)))
+    (jogar-computador-computador (tabuleiro-inicial)))
 
 (defun jogar-computador-computador (node)
   (loop

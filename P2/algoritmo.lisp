@@ -45,8 +45,8 @@
 (defun gerar-node (nodeAntigo estadoNovo jogador)
   (let ((pecas-capturadas (- (soma-pecas (estado nodeAntigo)) (soma-pecas estadoNovo))))
     (if (= jogador 1)
-        (list estadoNovo (+ (pontuacao-1 nodeAntigo) pecas-capturadas) (pontuacao-2 nodeAntigo))
-        (list estadoNovo (pontuacao-1 nodeAntigo) (+ (pontuacao-2 nodeAntigo) pecas-capturadas)))))
+        (list estadoNovo (list (+ (pontuacao-1 nodeAntigo) pecas-capturadas) (pontuacao-2 nodeAntigo)))
+        (list estadoNovo (list (pontuacao-1 nodeAntigo) (+ (pontuacao-2 nodeAntigo) pecas-capturadas))))))
 
 (defun incrementar-nos ()
   "Incrementa o contador de nós analisados"

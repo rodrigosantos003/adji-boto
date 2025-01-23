@@ -7,22 +7,17 @@
 
 (defun tabuleiro-vazio ()
   "Retorna um tabuleiro 2x6 (default) com as casas vazias"
-  '(((0 0 0 0 0 0)(0 0 0 0 0 0)) 0 0)
+  '(((0 0 0 0 0 0)(0 0 0 0 0 0)) (0 0))
 )
 
 (defun tabuleiro-teste ()
-  "Retorna um tabuleiro de teste 2x6 que corresponde ao tabuleiro d) do enunciado do projeto"
-  '(((4 4 4 4 4 4)(4 4 4 4 4 4)) 0 0)
-)
-
-(defun tabuleiro-captura ()
-  "Retorna um tabuleiro de teste 2x6 que corresponde ao tabuleiro d) do enunciado do projeto"
-  '(((1 1 1 1 1 1)(2 2 2 2 2 2)) 0 0)
+  "Retorna um tabuleiro de teste 2x6"
+  '(((1 1 1 1 1 1)(2 2 2 2 2 2)) (0 0))
 )
 
 
 (defun tabuleiro-inicial()
- '(((8 8 8 8 8 8)(8 8 8 8 8 8)) 0 0)
+ '(((8 8 8 8 8 8)(8 8 8 8 8 8)) (0 0))
 )
 
 ;;; Seletores
@@ -43,10 +38,10 @@
   (first node))
 
 (defun pontuacao-1 (node)
-  (second node))
+  (first (second node)))
 
 (defun pontuacao-2 (node)
-  (third node))
+  (second (second node)))
 
 ;;; Funções auxiliares
 
