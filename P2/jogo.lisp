@@ -24,7 +24,7 @@
          (start-time (get-internal-real-time)))
     (if children
         (progn
-          (let* ((result (melhor-jogada-recursiva jogador children depth color 1 most-negative-fixnum nil nil))
+          (let* ((result (melhor-jogada-recursiva jogador children depth color 0 most-negative-fixnum nil nil))
                  (end-time (get-internal-real-time))
                  (time-spent (float (/ (- end-time start-time) internal-time-units-per-second))))
             (apresentar-jogada result time-spent)
@@ -34,7 +34,7 @@
 (defun melhor-jogada-recursiva (jogador sucessores depth color index melhor-score melhor-index melhor-node)
   "Função recursiva auxiliar para encontrar a melhor jogada."
   (if (null sucessores)
-      (list melhor-index melhor-node)
+      (list (list (linha-jogador jogador) melhor-index) melhor-node)
       (let* ((current-node (car sucessores)))
         (if (not current-node) ; Verifica se o sucessor é nil
             (melhor-jogada-recursiva jogador (cdr sucessores) depth color (1+ index) melhor-score melhor-index melhor-node)
@@ -42,7 +42,6 @@
               (if (> score melhor-score)
                   (melhor-jogada-recursiva jogador (cdr sucessores) depth color (1+ index) score index current-node)
                   (melhor-jogada-recursiva jogador (cdr sucessores) depth color (1+ index) melhor-score melhor-index melhor-node)))))))
-
 
 ;; Humano vs Computador
 (defun humano-computador ()
@@ -174,7 +173,7 @@
 )
 
 (defun escrever-jogada (jogada tempo stream)
-  (format stream "Jogada (coluna ~A):~%" (jogada-coluna jogada))
+  (format stream "Jogada ~A:~%" (jogada-posicao jogada))
   (apresentar-tabuleiro (jogada-estado jogada) stream)
   (format stream "Pontuação: [Jogador 1 - ~A] | [Jogador 2 - ~A] ~%" (pontuacao-1 (jogada-node jogada)) (pontuacao-2 (jogada-node jogada)))
   (format stream "Nos analisados: ~A | Cortes: ~A | Tempo gasto (s): ~A~%" *numero-nos-analisados* *numero-cortes* tempo)
@@ -194,7 +193,7 @@
   (if (= jogador 1) 2 1)
 )
 
-(defun jogada-coluna (jogada)
+(defun jogada-posicao (jogada)
   (first jogada)
 )
 

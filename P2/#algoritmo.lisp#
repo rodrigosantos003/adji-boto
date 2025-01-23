@@ -1,10 +1,9 @@
 ;;; Ficheiro: algoritmo.lisp
 ;;; Algoritmo AlfaBeta
-;;; Autores: Jo„o Fernandes e Rodrigo Santos
+;;; Autores: Jo√£o Fernandes e Rodrigo Santos
 
 (defparameter *numero-nos-analisados* 0.0)
 (defparameter *numero-cortes* 0.0)
-
 
 (defun negamax (node depth jogador &optional (alpha most-negative-fixnum) (beta most-positive-fixnum) (color 1))
   (if (or (zerop depth) (terminalp node))
@@ -22,8 +21,6 @@
                 (incrementar-cortes)
                 beta)
               (negamax-recursivo node depth jogador new-alpha beta color (cdr children)))))))
-
-
 
 (defun terminalp (node)
   (tabuleiro-vaziop (estado node)))
@@ -48,7 +45,7 @@
         (list estadoNovo (list (pontuacao-1 nodeAntigo) (+ (pontuacao-2 nodeAntigo) pecas-capturadas))))))
 
 (defun incrementar-nos ()
-  "Incrementa o contador de nÛs analisados"
+  "Incrementa o contador de n√≥s analisados"
   (incf *numero-nos-analisados*))
 
 (defun incrementar-cortes ()
@@ -56,7 +53,7 @@
   (incf *numero-cortes*))
 
 (defun repor-contagem ()
-  "Repıe a contagem de nÛs analisados e de cortes"
+  "Rep√µe a contagem de n√≥s analisados e de cortes"
   (setf *numero-nos-analisados* 0.0)
   (setf *numero-cortes* 0.0)
 )
