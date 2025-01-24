@@ -5,31 +5,32 @@
 (defparameter *numero-nos-analisados* 0.0)
 (defparameter *numero-cortes* 0.0)
 
-(defun negamax (node depth jogador &optional (alpha -1000) (beta 1000) (color 1))
-  "Implementação otimizada do algoritmo Negamax com recursão funcional, contagem de nós analisados e sem consumo excessivo de memória stack."
-  (labels ((processar-filho (sucessores alpha beta)
-             (if (null sucessores)
-                 alpha
-                 (let* ((value (- (negamax (car sucessores) (1- depth) 
-                                             (alternar-jogador jogador) 
-                                             (- beta) 
-                                             (- alpha) 
-                                             (- color)))))
-                   (if (>= value beta)
-                       (progn
-                         (incrementar-cortes)
-                         beta)
-                       (processar-filho (cdr sucessores) (max alpha value) beta))))))
+(defvar *negamax-cache* (make-hash-table :test 'equal))
 
-    ;; Incrementa a contagem de nós analisados
-    (incrementar-nos)
-    
-    ;; Verifica se é um nó terminal ou profundidade zero
-    (if (or (zerop depth) (terminalp node))
-        (* color (evaluate node jogador))
-        (let ((sucessores (remove nil (sucessores node jogador))))
-          (processar-filho sucessores alpha beta)))))
-
+(defun negamax (node depth jogador &optional (alpha most-negative-fixnum) (beta most-positive-fixnum) (color 1))
+  "Implementa o algoritmo Negamax com memorização e poda alfa-beta."
+  (let ((cache-key (list node depth jogador alpha beta color)))
+    (or (gethash cache-key *negamax-cache*)
+        (setf (gethash cache-key *negamax-cache*)
+              (if (or (zerop depth) (terminalp node))
+                  (* color (evaluate node jogador))
+                (labels ((negamax-recursivo (children alpha beta)
+                           (if (null children)
+                               alpha
+                             (progn
+                               (incrementar-nos)
+                               (let* ((new-alpha (max alpha (- (negamax (car children)
+                                                                 (1- depth)
+                                                                 (alternar-jogador jogador)
+                                                                 (- beta)
+                                                                 (- alpha)
+                                                                 (- color))))))
+                                 (if (>= new-alpha beta)
+                                     (progn
+                                       (incrementar-cortes)
+                                       beta)
+                                   (negamax-recursivo (cdr children) new-alpha beta)))))))
+                  (negamax-recursivo (or (remove nil (sucessores node jogador)) (list node)) alpha beta)))))))
 
 (defun terminalp (node)
   (tabuleiro-vaziop (estado node)))
@@ -40,12 +41,10 @@
         (- (pontuacao-2 node) (pontuacao-1 node))))
 
 (defun sucessores (node jogador)
-  (let ((operadores (gerar-operadores (estado node) (linha-jogador jogador))))
-    (remove nil
-            (mapcar (lambda (op)
-                      (when op
-                        (gerar-node node (funcall op (estado node)) jogador)))
-                    operadores))))
+(mapcar (lambda (op)
+              (when op
+                (gerar-node node (funcall op (estado node)) jogador)))
+            (gerar-operadores (estado node) (linha-jogador jogador))))
 
 (defun gerar-node (nodeAntigo estadoNovo jogador)
   (let ((pecas-capturadas (- (soma-pecas (estado nodeAntigo)) (soma-pecas estadoNovo))))
