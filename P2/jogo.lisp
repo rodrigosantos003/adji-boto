@@ -18,7 +18,7 @@
 
 (defun jogar (node jogador)
   "Avalia os sucessores do nó usando NegaMax e retorna o índice do melhor movimento e o novo nó."
-  (let* ((depth 8)
+  (let* ((depth 7)
          (color 1)
          (children (sucessores node jogador))
          (start-time (get-internal-real-time)))
@@ -26,20 +26,21 @@
         (progn
           (let* ((result (melhor-jogada-recursiva jogador children depth color 0 most-negative-fixnum nil nil))
                  (end-time (get-internal-real-time))
-                 (time-spent (/ (- end-time start-time) internal-time-units-per-second)))
+                 (time-spent (float (/ (- end-time start-time) internal-time-units-per-second))))
             (apresentar-jogada result time-spent)
             result))
         (list nil node)))) ; Retorna nil como índice se não houver sucessores
 
+
 (defun melhor-jogada-recursiva (jogador sucessores depth color index melhor-score melhor-index melhor-node)
-  "Função recursiva otimizada para encontrar a melhor jogada."
+  "Função recursiva otimizada para encontrar a melhor jogada, com atualização de alpha."
   (if (null sucessores)
       (list (list (linha-jogador jogador) melhor-index) melhor-node)
-      (let* ((current-node (car sucessores))
-             (score (negamax current-node depth jogador most-negative-fixnum most-positive-fixnum color)))
+      (let* ((score (negamax (car sucessores) depth jogador melhor-score most-positive-fixnum color)))
         (if (> score melhor-score)
-            (melhor-jogada-recursiva jogador (cdr sucessores) depth color (1+ index) score index current-node)
-            (melhor-jogada-recursiva jogador (cdr sucessores) depth color (1+ index) melhor-score melhor-index melhor-node)))))
+            (melhor-jogada-recursiva jogador (cdr sucessores) depth color (1+ index) score index (car sucessores)) ; atualiza melhor-score
+            (melhor-jogada-recursiva jogador (cdr sucessores) depth color (1+ index) melhor-score melhor-index melhor-node))))) ; mantém o alpha atual
+
 
 ;; Humano vs Computador
 (defun humano-computador ()

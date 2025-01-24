@@ -10,8 +10,7 @@
   (labels ((processar-filho (sucessores alpha beta)
              (if (null sucessores)
                  alpha
-                 (let* ((child (car sucessores))
-                        (value (- (negamax child (1- depth) 
+                 (let* ((value (- (negamax (car sucessores) (1- depth) 
                                              (alternar-jogador jogador) 
                                              (- beta) 
                                              (- alpha) 
