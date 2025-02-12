@@ -84,11 +84,11 @@ O tempo gasto nas jogadas do computador é bastante baixo, devido à utilizaçã
 O algoritmo Negamax desenvolvido pelos alunos, possui as seguintes médias numa execução contra um
 adversário humano:
 
-- Número de nós analisados -
-- Número de cortes (beta) -
-- Tempo gasto -
+- Número de nós analisados - entre 300 e 600
+- Número de cortes (beta) - entre 100 a 200
+- Tempo gasto - até 0.5 segundos
 
-Para cada jogada, consultar o ficheiro log.dat
+Para cada jogada, consultar o ficheiro [log.dat](./log.dat)
 
 ## 7. Conclusão
 

@@ -83,8 +83,7 @@
     (progn
       (let* ((inicio-tempo (get-internal-real-time))
              (jogada-humano (ler-jogada-humano node jogador-humano))
-             (tempo-gasto (/ (- (get-internal-real-time) inicio-tempo)
-                             internal-time-units-per-second))) ; em segundos
+             (tempo-gasto (float (/ (- (get-internal-real-time) inicio-tempo) internal-time-units-per-second))))
         ;; Apresenta a jogada e o tempo gasto
         (apresentar-jogada jogada-humano tempo-gasto)
         (jogada-node jogada-humano))))) ;; Retorna o novo estado do nó
@@ -151,7 +150,7 @@
               (return)) ;; Sai do loop
           (format t "A coluna escolhida não é válida ou está vazia. Por favor, escolha outra.~%"))))
     ;; Retorna o novo nó atualizado com a jogada válida
-    (list jogada-valida
+    (list (list (linha-jogador jogador) jogada-valida)
           (gerar-node node (aplicar-operador (estado node) (linha-jogador jogador) (- jogada-valida 1)) jogador))))
 
 
